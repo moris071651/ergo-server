@@ -1,6 +1,6 @@
 from typing import Optional
 from fastapi import Request, status
-from schemas.error import ErrorResponse
+from app.schemas.error import ErrorResponse
 from starlette.responses import JSONResponse
 
 class CustomBaseException(Exception):
