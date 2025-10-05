@@ -17,3 +17,11 @@ class UserNotLoggedInException(CustomBaseException):
             status.HTTP_401_UNAUTHORIZED,
             'User Not Logged In'
         )
+
+
+class UserAlreadyExistsException(CustomBaseException):
+    def __init__(self):
+        super().__init__(
+            status.HTTP_400_BAD_REQUEST,
+            'Username or email already exists'
+        )

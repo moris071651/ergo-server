@@ -13,7 +13,8 @@ async def get_db() -> AsyncSession:
         try:
             yield session
             await session.commit()
-            
+
         except:
             await session.rollback()
-            raise    
+            raise
+        
