@@ -6,6 +6,7 @@ DATABASE_URL = "postgresql+asyncpg://user:pass@localhost/dbname"
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
+Session = AsyncSession
 
 
 async def get_db() -> AsyncSession:
@@ -17,4 +18,3 @@ async def get_db() -> AsyncSession:
         except:
             await session.rollback()
             raise
-        
