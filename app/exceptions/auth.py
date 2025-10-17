@@ -10,7 +10,6 @@ class UserAlreadyLoggedInException(CustomBaseException):
         )
 
 
-
 class UserNotLoggedInException(CustomBaseException):
     def __init__(self):
         super().__init__(
