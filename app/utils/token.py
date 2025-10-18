@@ -2,7 +2,9 @@ from uuid import uuid4
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from typing import Optional
+
 from app.config.redis import redis_client
+from app.config.settings import REDIS_LOGOUT_SET
 
 
 SECRET_KEY = "super-secret-key"  
@@ -14,7 +16,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     to_encode.update({
         "jti": str(uuid4()),
-        "exp": datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)),
+        "iat": int(datetime.utcnow().timestamp()),
+        "exp": int((datetime.utcnow() + expires_delta).timestamp()),
     })
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm = ALGORITHM)
@@ -32,9 +35,15 @@ def decode_access_token(token: str) -> Optional[dict]:
 async def revoke_token(jti: str, exp_timestamp: int):
     ttl = exp_timestamp - int(datetime.utcnow().timestamp())
     if ttl > 0:
-        await redis_client.sadd("revoked_tokens", jti)
-        await redis_client.expire("revoked_tokens", ttl)
+        await redis_client.sadd(REDIS_LOGOUT_SET, jti)
+        await redis_client.expire(REDIS_LOGOUT_SET, ttl)
 
 
 async def is_token_revoked(jti: str) -> bool:
-    return await redis_client.sismember("revoked_tokens", jti)
+    return await redis_client.sismember(REDIS_LOGOUT_SET, jti)
+
+
+async def is_token_valid(jti: str, exp: int) -> bool:
+    revoked = await is_token_revoked(jti)
+    not_expired = exp > int(datetime.utcnow().timestamp())
+    return (not revoked) and not_expired
