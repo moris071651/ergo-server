@@ -3,16 +3,14 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from typing import Optional
 
-from app.config.redis import redis_client
-from app.config.settings import REDIS_LOGOUT_SET
+from app.config.redis import get_redis
+from app.config.settings import REDIS_LOGOUT_SET, AUTH_COOKIE_MAX_AGE
+from app.config.settings import JWT_ALGORITHM, JWT_SECRET_KEY
 
 
-SECRET_KEY = "super-secret-key"  
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+def create_access_token(data: dict, expires_delta: Optional[int] = AUTH_COOKIE_MAX_AGE):
+    expires_delta = timedelta(seconds=expires_delta)
 
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     to_encode.update({
         "jti": str(uuid4()),
@@ -20,12 +18,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         "exp": int((datetime.utcnow() + expires_delta).timestamp()),
     })
 
-    return jwt.encode(to_encode, SECRET_KEY, algorithm = ALGORITHM)
+    return jwt.encode(to_encode, JWT_SECRET_KEY, algorithm = JWT_ALGORITHM)
 
 
 def decode_access_token(token: str) -> Optional[dict]:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms = [ALGORITHM])
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms = [JWT_ALGORITHM])
         return payload
     
     except JWTError:
@@ -35,12 +33,12 @@ def decode_access_token(token: str) -> Optional[dict]:
 async def revoke_token(jti: str, exp_timestamp: int):
     ttl = exp_timestamp - int(datetime.utcnow().timestamp())
     if ttl > 0:
-        await redis_client.sadd(REDIS_LOGOUT_SET, jti)
-        await redis_client.expire(REDIS_LOGOUT_SET, ttl)
+        await get_redis().sadd(REDIS_LOGOUT_SET, jti)
+        await get_redis().expire(REDIS_LOGOUT_SET, ttl)
 
 
 async def is_token_revoked(jti: str) -> bool:
-    return await redis_client.sismember(REDIS_LOGOUT_SET, jti)
+    return await get_redis().sismember(REDIS_LOGOUT_SET, jti) == 1
 
 
 async def is_token_valid(jti: str, exp: int) -> bool:
