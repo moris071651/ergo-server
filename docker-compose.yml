@@ -1,0 +1,55 @@
+services:
+  web:
+    build: .
+    container_name: ergo_server
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/app_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - backend
+      - frontend
+
+  db:
+    image: postgres:18
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432"
+    restart: unless-stopped
+    networks:
+      - backend
+
+  redis:
+    image: redis:8
+    container_name: redis_cache
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379"
+    restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  pg_data:
+  redis_data:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge

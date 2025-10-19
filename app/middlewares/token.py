@@ -17,11 +17,13 @@ class TokenMiddleware(BaseHTTPMiddleware):
         req.state.user = None
         
         payload = decode_access_token(token) if token else None
-        user_id = payload.get("user_id") if payload else None
+        user_id = payload.get("id") if payload else None
         req.state.jwt = payload
 
         if payload and not await is_token_valid(payload['jti'], payload['exp']):
             user_id = None
+
+        print(payload)
 
         if user_id:
             async for db in get_db():

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
+import json
 from uuid import UUID
-from fastapi import APIRouter, Body, Depends, Request, status
+from fastapi import APIRouter, Body, Depends, Request, Response, status
 from fastapi.responses import JSONResponse
 
 from app.db.session import Session, get_db
@@ -17,6 +18,7 @@ router = APIRouter(prefix='/auth', tags=['Auth'])
 @router.post('/signup')
 async def signup(
     req: Request,
+    res: Response,
     new_user: UserSignupRequest = Body(),
     db: Session = Depends(get_db)
 ) -> UserAuthResponse:
@@ -26,11 +28,7 @@ async def signup(
     user = await service.signup(new_user, db)
     access_token = create_access_token({"id": str(user.id)})
 
-    res = JSONResponse(
-        content = user.model_dump(),
-        status_code = status.HTTP_201_CREATED
-    )
-
+    res.status_code = status.HTTP_201_CREATED
     res.set_cookie(
         key = AUTH_COOKIE_KEY,
         value = access_token,
@@ -40,12 +38,13 @@ async def signup(
         max_age = AUTH_COOKIE_MAX_AGE
     )
 
-    return res
+    return user
 
 
 @router.post('/login')
 async def login(
     req: Request,
+    res: Response,
     credentials: UserLoginRequest = Body(),
     db: Session = Depends(get_db)
 ) -> UserAuthResponse:
@@ -55,11 +54,7 @@ async def login(
     user = await service.login(credentials, db)
     access_token = create_access_token({"id": str(user.id)})
 
-    res = JSONResponse(
-        content=user.model_dump(),
-        status_code = status.HTTP_200_OK
-    )
-
+    res.status_code = status.HTTP_200_OK
     res.set_cookie(
         key = AUTH_COOKIE_KEY,
         value = access_token,
@@ -69,7 +64,7 @@ async def login(
         max_age = AUTH_COOKIE_MAX_AGE
     )
 
-    return res
+    return user
 
 
 @router.get('/login')
@@ -88,7 +83,10 @@ async def get_session_info(req: Request) -> AuthSessionInfo:
 
 
 @router.delete('/logout')
-async def logout(req: Request):
+async def logout(
+    req: Request,
+    res: Response
+):
     if req.state.user is None:
         raise UserNotLoggedInException()
     
@@ -97,12 +95,10 @@ async def logout(req: Request):
         exp_timestamp = req.state.jwt['exp']
     )
     
-    res = JSONResponse(status_code = status.HTTP_204_NO_CONTENT)
+    res.status_code = status.HTTP_204_NO_CONTENT
     res.delete_cookie(
         key = AUTH_COOKIE_KEY,
         httponly = AUTH_COOKIE_HTTPONLY,
         secure = AUTH_COOKIE_SECURE,
         samesite = AUTH_COOKIE_SAMESITE
     )
-
-    return res

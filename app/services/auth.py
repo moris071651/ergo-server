@@ -1,10 +1,11 @@
 
 
+from uuid import UUID
 from sqlalchemy import select
 from app.db.session import Session
 from app.exceptions.auth import InvalidCredentialsException, UserAlreadyExistsException
 from app.models.users import User
-from app.schemas.users import UserAuthResponse, UserLoginRequest, UserSignupRequest
+from app.schemas.auth import UserAuthResponse, UserLoginRequest, UserSignupRequest
 from app.utils.password import hash_password, verify_password
 
 
