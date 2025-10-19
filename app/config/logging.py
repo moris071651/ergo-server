@@ -1,9 +1,6 @@
 from datetime import datetime
 
 def get_logging_config():
-    timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    filename = f"logs/{timestamp}.json"
-
     return {
         "version": 1,
         "disable_existing_loggers": False,
@@ -27,7 +24,7 @@ def get_logging_config():
             "file": {
                 "class": "logging.FileHandler",
                 "formatter": "json",
-                "filename": filename,
+                "filename": "logs/app.log",
                 "mode": "a",
                 "encoding": "utf-8",
             },
