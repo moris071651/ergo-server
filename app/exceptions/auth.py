@@ -22,7 +22,7 @@ class UserAlreadyExistsException(CustomBaseException):
     def __init__(self):
         super().__init__(
             status.HTTP_400_BAD_REQUEST,
-            'Username or email already exists'
+            'Email already exists'
         )
 
 

@@ -4,8 +4,9 @@ from pydantic import BaseModel, EmailStr
 
 
 class UserSignupRequest(BaseModel):
-    username: str
     email: EmailStr
+    first_name: str
+    last_name: str
     password: str
 
 
@@ -16,7 +17,8 @@ class UserLoginRequest(BaseModel):
 
 class UserAuthResponse(BaseModel):
     id: UUID
-    username: str
+    first_name: str
+    last_name: str
     email: EmailStr
 
 
