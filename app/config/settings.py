@@ -28,3 +28,15 @@ database_cfg = data.get("database", {})
 DATABASE_URL = os.getenv("DATABASE_URL", database_cfg.get("url", "postgresql+psycopg2://postgres:postgres@localhost:5432/app_db"))
 DATABASE_ECHO = database_cfg.get("echo", True)
 DATABASE_FUTURE = database_cfg.get("future", True)
+
+bucket_cfg = data.get("bucket", {})
+BUCKET_USER_PICTURE = bucket_cfg.get("user_picture", "user-picture")
+
+storage_cfg = data.get("storage", {})
+STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", storage_cfg.get("provider", "minio"))
+STORAGE_ENDPOINT = os.getenv("STORAGE_ENDPOINT", storage_cfg.get("endpoint"))
+
+s3_cfg = storage_cfg.get("aws", {})
+STORAGE_AWS_REGION = os.getenv("AWS_REGION", s3_cfg.get("region", "us-east-1"))
+STORAGE_AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", s3_cfg.get("access_key", "minioadmin"))
+STORAGE_AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", s3_cfg.get("secret_key", "minioadmin"))

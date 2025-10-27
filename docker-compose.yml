@@ -10,9 +10,14 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/app_db
       - REDIS_URL=redis://redis:6379/0
+      - STORAGE_PROVIDER=minio
+      - STORAGE_ENDPOINT=http://minio:9000
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
     depends_on:
       - db
       - redis
+      - minio
     restart: unless-stopped
     networks:
       - backend
@@ -44,9 +49,26 @@ services:
     networks:
       - backend
 
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+    networks:
+      - backend
+
 volumes:
   pg_data:
   redis_data:
+  minio_data:
 
 networks:
   frontend:
