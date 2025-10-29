@@ -1,5 +1,3 @@
-
-
 from sqlalchemy import select
 from app.db.session import Session
 from app.exceptions.auth import InvalidCredentialsException, UserAlreadyExistsException

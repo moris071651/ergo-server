@@ -2,7 +2,6 @@ from uuid import UUID
 
 from app.db.session import Session
 from app.config.settings import BUCKET_USER_PICTURE
-from app.models.users import User
 from app.schemas.users import UserPictureResponse, UserResponse
 from app.utils.storage.base import StorageAdapter
 from app.utils.user import fetch_user, user_exists

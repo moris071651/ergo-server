@@ -1,4 +1,3 @@
-import os
 from app.config.settings import STORAGE_AWS_ACCESS_KEY_ID, STORAGE_AWS_REGION, STORAGE_AWS_SECRET_ACCESS_KEY, STORAGE_ENDPOINT, STORAGE_PROVIDER
 
 from app.utils.storage.base import StorageAdapter
