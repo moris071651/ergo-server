@@ -3,24 +3,21 @@ import mimetypes
 from typing import Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
 from app.config.settings import BUCKET_USER_PICTURE
 from app.exceptions.file import FileCreationFailedException, FileDeletionFailedException, FileFetchingFailedException, NotImageFormatException
 from app.exceptions.users import EmailUsedExistsException
 
-from app.models.users import User
 from app.db.session import Session
 from app.schemas.users import CurrentUserResponse, UpdateUserRequest, UserPictureResponse
 from app.utils.storage.base import StorageAdapter
-from app.utils.user import email_available
+from app.utils.user import email_available, fetch_user
 
 
 async def get_current_user(
     user_id: UUID,
     db: Session
 ):
-    result = await db.execute(select(User).filter(User.id == user_id))
-    user = result.scalars().first()
+    user = fetch_user(db, user_id)
     
     return CurrentUserResponse(
         id = user.id,
@@ -38,8 +35,7 @@ async def update_current_user(
     update: UpdateUserRequest,
     db: Session
 ) -> CurrentUserResponse:
-    result = await db.execute(select(User).filter(User.id == user_id))
-    user = result.scalars().first()
+    user = fetch_user(db, user_id)
     
     for key, value in update.model_dump(
         exclude_unset = True,
@@ -68,9 +64,7 @@ async def deactivate_current_user(
     user_id: UUID,
     db: Session
 ):
-    result = await db.execute(select(User).filter(User.id == user_id))
-    user = result.scalars().first()
-
+    user = fetch_user(db, user_id)
     user.deleted_at = datetime.utcnow()
     await db.commit()
 
@@ -80,8 +74,7 @@ async def get_current_user_picture(
     db: Session,
     storage: StorageAdapter
 ) -> UserPictureResponse:
-    result = await db.execute(select(User).filter(User.id == user_id))
-    user = result.scalars().first()
+    user = fetch_user(db, user_id)
 
     if not user.profile_image_key:
         return UserPictureResponse(
@@ -119,9 +112,7 @@ async def update_current_user_picture(
         storage.put_object("user-pictures", key, file_bytes, content_type=mime_type)
         file_url = storage.create_presigned_url(BUCKET_USER_PICTURE, key, expires_seconds=86400)
 
-        result = await db.execute(select(User).filter(User.id == user_id))
-        user = result.scalars().first()
-
+        user = fetch_user(db, user_id)
         user.profile_image_key = key
         await db.commit()
 
@@ -138,8 +129,7 @@ async def delete_current_user_picture(
     db: Session,
     storage: StorageAdapter
 ):
-    result = await db.execute(select(User).filter(User.id == user_id))
-    user = result.scalars().first()
+    user = fetch_user(db, user_id)
 
     if not user.profile_image_key:
         return
