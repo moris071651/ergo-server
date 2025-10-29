@@ -10,10 +10,9 @@ class UserResponse(BaseModel):
     profile_image_url: Optional[str]
     first_name: str
     last_name: str
-
+    created_at: datetime
 
 class CurrentUserResponse(UserResponse):
-    created_at: datetime
     updated_at: datetime
 
 
