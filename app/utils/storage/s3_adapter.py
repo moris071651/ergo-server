@@ -1,5 +1,6 @@
 import boto3
 from botocore.client import Config
+from botocore.exceptions import ClientError
 from typing import List, Union, Optional
 
 from app.utils.storage.base import StorageAdapter
@@ -23,6 +24,30 @@ class S3Adapter(StorageAdapter):
         )
 
         self.endpoint_url = endpoint_url
+
+
+    def create_bucket(self, bucket: str) -> bool:
+        try:
+            params = {"Bucket": bucket}
+            if self.endpoint_url is None or "amazonaws.com" in self.endpoint_url:
+                if self.region != "us-east-1":
+                    params["CreateBucketConfiguration"] = {
+                        "LocationConstraint": self.region
+                    }
+
+            self.s3.create_bucket(**params)
+            return True
+
+        except ClientError as e:
+            error_code = e.response["Error"]["Code"]
+            if error_code == "BucketAlreadyOwnedByYou":
+                return False
+            
+            elif error_code == "BucketAlreadyExists":
+                raise ValueError(f"Bucket name '{bucket}' is already taken globally.")
+            
+            else:
+                raise e
 
 
     def put_object(self, bucket: str, key: str, data: Union[bytes, str], content_type: Optional[str] = None) -> None:

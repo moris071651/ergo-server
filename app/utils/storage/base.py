@@ -3,6 +3,9 @@ from typing import List, Optional, Union
 
 
 class StorageAdapter(ABC):
+    @abstractmethod
+    def create_bucket(self, bucket: str):
+        pass
 
     @abstractmethod
     def put_object(self, bucket: str, key: str, data: Union[bytes, str], content_type: Optional[str] = None) -> None:
