@@ -5,9 +5,9 @@ from app.config.settings import BUCKET_USER_PICTURE
 
 from app.db.session import Session
 from app.models.users import User
-from app.schemas.users import UserResponse
+from app.schemas.users import UserPictureResponse, UserResponse
 from app.utils.storage.base import StorageAdapter
-from app.utils.user import user_exists
+from app.utils.user import fetch_user, user_exists
 
 
 async def get_users():
@@ -18,13 +18,11 @@ async def get_user(
     user_id: UUID,
     db: Session,
     storage: StorageAdapter
-):
+) -> UserResponse:
     if not user_exists(db, user_id):
         raise Exception
     
-    result = await db.execute(select(User).filter(User.id == user_id))
-    user = result.scalars().first()
-
+    user = fetch_user(db, user_id)
     profile_image_url = storage.create_presigned_url(BUCKET_USER_PICTURE, user.profile_image_key)
     
     return UserResponse(
@@ -37,6 +35,17 @@ async def get_user(
     )
 
 
-async def get_user_picture(user_id: UUID):
+async def get_user_picture(
+    user_id: UUID,
+    db: Session,
+    storage: StorageAdapter
+) -> UserPictureResponse:
+    if not user_exists(db, user_id):
+        raise Exception
+    
+    user = fetch_user(db, user_id)
+    profile_image_url = storage.create_presigned_url(BUCKET_USER_PICTURE, user.profile_image_key)
 
-    raise NotImplementedError
+    return UserPictureResponse(
+        profile_image_url=profile_image_url
+    )
