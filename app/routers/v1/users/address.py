@@ -1,4 +1,3 @@
-
 from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, Request, status
@@ -36,7 +35,7 @@ async def get_addresses_by_id(
     return await service.get_addresses_by_id(db, user_id, address_id)
 
 
-@router.post('/{address_id}', status_code=status.HTTP_201_CREATED)
+@router.post('/', status_code=status.HTTP_201_CREATED)
 async def add_address(
     req: Request,
     address_id: UUID,
