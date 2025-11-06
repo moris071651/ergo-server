@@ -73,4 +73,4 @@ async def remove_address(
         raise UserNotLoggedInException()
 
     user_id = req.state.user_id
-    return await service.remove_address(db, user_id, address_id)
+    await service.remove_address(db, user_id, address_id)

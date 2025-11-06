@@ -28,3 +28,6 @@ class AddressResponse(AddressCreate):
     city: Optional[str]
     postal_code: Optional[str] = None
     country: Optional[str]
+
+    class Config:
+        from_attributes = True
