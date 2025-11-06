@@ -47,3 +47,16 @@ async def add_address(
 
     user_id = req.state.user_id
     return await service.add_address(db, user_id, address_id)
+
+
+@router.patch('/{address_id}')
+async def update_address(
+    req: Request,
+    address_id: UUID,
+    db: Session = Depends(get_db)
+) -> AddressResponse:
+    if req.state.user_id is None:
+        raise UserNotLoggedInException()
+
+    user_id = req.state.user_id
+    return await service.update_address(db, user_id, address_id)
