@@ -1,11 +1,11 @@
 
 from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, status
 from app.db.session import Session, get_db
 from app.exceptions.auth import UserNotLoggedInException
 from app.services.users import address as service
-from app.schemas.address import AddressResponse
+from app.schemas.address import AddressCreate, AddressResponse, AddressUpdate
 
 
 router = APIRouter(prefix='/users/me/address', tags=["Current user's addresses"])
@@ -36,33 +36,35 @@ async def get_addresses_by_id(
     return await service.get_addresses_by_id(db, user_id, address_id)
 
 
-@router.post('/{address_id}')
+@router.post('/{address_id}', status_code=status.HTTP_201_CREATED)
 async def add_address(
     req: Request,
     address_id: UUID,
+    address_data: AddressCreate,
     db: Session = Depends(get_db)
 ) -> AddressResponse:
     if req.state.user_id is None:
         raise UserNotLoggedInException()
 
     user_id = req.state.user_id
-    return await service.add_address(db, user_id, address_id)
+    return await service.add_address(db, user_id, address_id, address_data)
 
 
 @router.patch('/{address_id}')
 async def update_address(
     req: Request,
     address_id: UUID,
+    address_data: AddressUpdate,
     db: Session = Depends(get_db)
 ) -> AddressResponse:
     if req.state.user_id is None:
         raise UserNotLoggedInException()
 
     user_id = req.state.user_id
-    return await service.update_address(db, user_id, address_id)
+    return await service.update_address(db, user_id, address_id, address_data)
 
 
-@router.delete('/{address_id}')
+@router.delete('/{address_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def remove_address(
     req: Request,
     address_id: UUID,
