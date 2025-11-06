@@ -1,4 +1,5 @@
 import uuid
+from sqlalchemy.orm import relationship
 from sqlalchemy import UUID, Column, DateTime, String, func
 from app.db.session import Base
 
@@ -18,3 +19,5 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
     deleted_at = Column(DateTime(timezone=True), nullable=True)
+
+    addresses = relationship("Address", back_populates="user", cascade="all, delete-orphan")

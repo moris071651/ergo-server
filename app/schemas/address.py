@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 from uuid import UUID
 from typing import Optional
 
@@ -24,7 +24,7 @@ class AddressUpdate(BaseModel):
 
 class AddressResponse(AddressCreate):
     id: UUID
-    street: str
-    city: str
+    street: Optional[str]
+    city: Optional[str]
     postal_code: Optional[str] = None
-    country: str
+    country: Optional[str]
