@@ -3,8 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID
 
-from app.models import Address
-from app.schemas.address import AddressResponse
+from app.models.address import Address
+from app.schemas.address import AddressCreate, AddressResponse
+from app.utils.geo import reverse_geocode
 
 async def get_all_addresses(db: AsyncSession, user_id: UUID) -> List[AddressResponse]:
     result = await db.execute(select(Address).where(Address.user_id == user_id))
@@ -21,6 +22,24 @@ async def get_addresses_by_id(db: AsyncSession, user_id: UUID, address_id: UUID)
         raise Exception()
 
     return AddressResponse.model_validate(address)
+
+
+async def add_address(db: AsyncSession, user_id: UUID, data: AddressCreate) -> AddressResponse:
+    geo_location = reverse_geocode(data.lat, data.lon)
+
+    if geo_location is None:
+        raise Exception()
+
+    new_address = Address(
+        user_id=user_id,
+        **data.model_dump(),
+        **geo_location.model_dump()
+    )
+
+    db.add(new_address)
+    await db.commit()
+    await db.refresh(new_address)
+    return AddressResponse.model_validate(new_address)
 
 
 async def remove_address(db: AsyncSession, user_id: UUID, address_id: UUID) -> None:
