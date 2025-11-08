@@ -10,22 +10,23 @@ from app.utils.storage.base import StorageAdapter
 from app.utils.token import revoke_token
 
 
-router = APIRouter(prefix='/users/me', tags=['Current user'])
+router = APIRouter(prefix='/me', tags=['Current user'])
 
 
-@router.get("/")
+@router.get('')
 async def get_current_user(
     req: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    storage: StorageAdapter = Depends(get_storage_adapter)
 ) -> CurrentUserResponse:
     if req.state.user_id is None:
         raise UserNotLoggedInException()
 
     user_id = req.state.user_id
-    return await service.get_current_user(user_id, db)
+    return await service.get_current_user(user_id, db, storage)
 
 
-@router.patch('/')
+@router.patch('')
 async def update_current_user(
     req: Request,
     update: UpdateUserRequest,
@@ -38,7 +39,7 @@ async def update_current_user(
     return await service.update_current_user(user_id, update, db)
 
 
-@router.delete('/')
+@router.delete('')
 async def deactivate_current_user(
     req: Request,
     res: Response,

@@ -7,7 +7,7 @@ from app.services.users import address as service
 from app.schemas.address import AddressCreate, AddressResponse, AddressUpdate
 
 
-router = APIRouter(prefix='/users/me/address', tags=["Current user's addresses"])
+router = APIRouter(prefix='/me/address', tags=["Current user's addresses"])
 
 
 @router.get('/')
@@ -38,7 +38,6 @@ async def get_addresses_by_id(
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def add_address(
     req: Request,
-    address_id: UUID,
     address_data: AddressCreate,
     db: Session = Depends(get_db)
 ) -> AddressResponse:
@@ -46,7 +45,7 @@ async def add_address(
         raise UserNotLoggedInException()
 
     user_id = req.state.user_id
-    return await service.add_address(db, user_id, address_id, address_data)
+    return await service.add_address(db, user_id, address_data)
 
 
 @router.patch('/{address_id}')
@@ -68,7 +67,7 @@ async def remove_address(
     req: Request,
     address_id: UUID,
     db: Session = Depends(get_db)
-) -> AddressResponse:
+) -> None:
     if req.state.user_id is None:
         raise UserNotLoggedInException()
 

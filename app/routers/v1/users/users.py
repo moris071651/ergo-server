@@ -6,7 +6,7 @@ from app.utils.storage import get_storage_adapter
 from app.utils.storage.base import StorageAdapter
 
 
-router = APIRouter(prefix='/users', tags=['Users'])
+router = APIRouter(tags=['Users'])
 
 
 @router.get("/")

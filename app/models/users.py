@@ -2,6 +2,7 @@ import uuid
 from sqlalchemy.orm import relationship
 from sqlalchemy import UUID, Column, DateTime, String, func
 from app.db.session import Base
+from app.models.address import Address
 
 
 class User(Base):

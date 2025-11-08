@@ -75,9 +75,12 @@ class S3Adapter(StorageAdapter):
         self.s3.delete_object(Bucket=bucket, Key=key)
 
 
-    def create_presigned_url(self, bucket: str, key: str, expires_seconds: int = 3600) -> str:
-        return self.s3.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": bucket, "Key": key},
-            ExpiresIn=expires_seconds,
-        )
+    def create_presigned_url(self, bucket: str, key: str, expires_seconds: int = 3600) -> Optional[str]:
+        try:
+            return self.s3.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": bucket, "Key": key},
+                ExpiresIn=expires_seconds,
+            )
+        except:
+            return None

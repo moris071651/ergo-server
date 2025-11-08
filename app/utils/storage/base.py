@@ -24,6 +24,6 @@ class StorageAdapter(ABC):
         pass
 
     @abstractmethod
-    def create_presigned_url(self, bucket: str, key: str, expires_seconds: int = 3600) -> str:
+    def create_presigned_url(self, bucket: str, key: str, expires_seconds: int = 3600) -> Optional[str]:
         pass
     

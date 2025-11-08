@@ -15,14 +15,16 @@ from app.utils.user import email_available, fetch_user
 
 async def get_current_user(
     user_id: UUID,
-    db: Session
+    db: Session,
+    storage: StorageAdapter
 ):
-    user = fetch_user(db, user_id)
+    user = await fetch_user(db, user_id)
+    url = storage.create_presigned_url(BUCKET_USER_PICTURE, user.profile_image_key, expires_seconds=3600)
     
     return CurrentUserResponse(
         id = user.id,
         email = user.email,
-        profile_image_url = user.profile_image_url,
+        profile_image_url = url,
         first_name = user.first_name,
         last_name = user.last_name,
         created_at = user.created_at,
@@ -35,7 +37,7 @@ async def update_current_user(
     update: UpdateUserRequest,
     db: Session
 ) -> CurrentUserResponse:
-    user = fetch_user(db, user_id)
+    user = await fetch_user(db, user_id)
     
     for key, value in update.model_dump(
         exclude_unset = True,
@@ -64,7 +66,7 @@ async def deactivate_current_user(
     user_id: UUID,
     db: Session
 ):
-    user = fetch_user(db, user_id)
+    user = await fetch_user(db, user_id)
     user.deleted_at = datetime.utcnow()
     await db.commit()
 
@@ -74,7 +76,7 @@ async def get_current_user_picture(
     db: Session,
     storage: StorageAdapter
 ) -> UserPictureResponse:
-    user = fetch_user(db, user_id)
+    user = await fetch_user(db, user_id)
 
     if not user.profile_image_key:
         return UserPictureResponse(
@@ -112,7 +114,7 @@ async def update_current_user_picture(
         storage.put_object("user-pictures", key, file_bytes, content_type=mime_type)
         file_url = storage.create_presigned_url(BUCKET_USER_PICTURE, key, expires_seconds=86400)
 
-        user = fetch_user(db, user_id)
+        user = await fetch_user(db, user_id)
         user.profile_image_key = key
         await db.commit()
 
@@ -129,7 +131,7 @@ async def delete_current_user_picture(
     db: Session,
     storage: StorageAdapter
 ):
-    user = fetch_user(db, user_id)
+    user = await fetch_user(db, user_id)
 
     if not user.profile_image_key:
         return
