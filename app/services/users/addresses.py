@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from uuid import UUID
 
 from app.models.address import Address
-from app.schemas.address import AddressCreate, AddressResponse
+from app.schemas.address import AddressCreate, AddressResponse, AddressUpdate
 from app.utils.geo import reverse_geocode
 
 async def get_all_addresses(db: AsyncSession, user_id: UUID) -> List[AddressResponse]:
@@ -40,6 +40,32 @@ async def add_address(db: AsyncSession, user_id: UUID, data: AddressCreate) -> A
     await db.commit()
     await db.refresh(new_address)
     return AddressResponse.model_validate(new_address)
+
+
+async def update_address(db: AsyncSession, user_id: UUID, address_id: UUID, data: AddressUpdate) -> AddressResponse:
+    stmt = select(Address).where(Address.id == address_id, Address.user_id == user_id)
+    result = await db.execute(stmt)
+    address = result.scalars().first()
+
+    if not address:
+        raise Exception()
+    
+    location_available = data.lon is not None and data.lat is not None
+    location_change = data.lon != address.lon or data.lat != address.lat
+
+    if location_available and location_change:
+        geo_location = reverse_geocode(data.lat, data.lon)
+        for field, value in geo_location.model_dump(exclude_none=True).items():
+            setattr(address, field, value)
+        address.lon = data.lon
+        address.lat = data.lat
+
+    if data.label is not None:
+        address.label = data.label
+
+    await db.commit()
+    await db.refresh(address)
+    return AddressResponse.model_validate(address)
 
 
 async def remove_address(db: AsyncSession, user_id: UUID, address_id: UUID) -> None:
