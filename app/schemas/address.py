@@ -20,14 +20,18 @@ class AddressUpdate(BaseModel):
             raise ValueError("Both 'lon' and 'lat' must be provided together.")
         
         return self
+    
 
-
-class AddressResponse(AddressCreate):
-    id: UUID
+class GeoLocation(BaseModel):
     street: Optional[str]
+    house_number: Optional[str]
     city: Optional[str]
     postal_code: Optional[str] = None
     country: Optional[str]
+
+
+class AddressResponse(AddressCreate, GeoLocation):
+    id: UUID
 
     class Config:
         from_attributes = True
