@@ -1,0 +1,29 @@
+from datetime import datetime
+from typing import List, Optional
+from uuid import UUID
+from pydantic import BaseModel
+
+
+class WorkerResponse(BaseModel):
+    user_id: UUID
+    bio: Optional[str]
+    service_radius_km: Optional[int]
+    experience_years: Optional[int]
+    skills: List[str]
+    available: bool
+    created_at: datetime
+    
+
+class CurrentWorkerResponse(WorkerResponse):
+    updated_at: datetime
+
+
+class WorkerCreate(BaseModel):
+    bio: Optional[str]
+    service_radius_km: Optional[int]
+    experience_years: Optional[int]
+    skills: Optional[List[str]]
+
+
+class WorkerUpdate(WorkerCreate):
+    pass
