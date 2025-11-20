@@ -12,7 +12,10 @@ class WorkerResponse(BaseModel):
     skills: List[str]
     available: bool
     created_at: datetime
-    
+
+    class Config:
+        from_attributes = True    
+
 
 class CurrentWorkerResponse(WorkerResponse):
     updated_at: datetime
