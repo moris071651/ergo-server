@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Request, status
 
 from app.db.session import Session, get_db
+from app.services.workers import me as service
 from app.exceptions.auth import UserNotLoggedInException
+from app.schemas.workers import CurrentWorkerResponse, WorkerCreate, WorkerUpdate
 
 
 router = APIRouter(prefix='/me')
