@@ -68,3 +68,12 @@ async def update_worker_profile(
     await db.refresh(worker)
 
     return CurrentWorkerResponse.model_validate(worker)
+
+
+async def deactivate_worker_profile(
+    db: Session,
+    user_id: UUID
+):
+    worker = await get_worker_panic(db, user_id)
+    worker.deleted_at = datetime.utcnow()
+    await db.commit()
