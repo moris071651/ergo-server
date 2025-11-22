@@ -52,3 +52,11 @@ async def replace_skills(db: AsyncSession, user_id: UUID, skills: Union[str, Lis
     await db.commit()
 
     return await add_skills(db, user_id, skill_names)
+
+
+async def remove_skills(db: AsyncSession, user_id: UUID, skills: Optional[Union[str, List[str]]]):
+    skill_names = await _normalize_skills(skills)
+    worker = await get_worker_panic(db, user_id)
+
+    worker.skills = [s for s in worker.skills if s.name.lower() not in skill_names]
+    await db.commit()
