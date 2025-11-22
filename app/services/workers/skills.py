@@ -42,3 +42,13 @@ async def add_skills(db: AsyncSession, user_id: UUID, skills: Union[str, List[st
     await db.commit()
     await db.refresh(worker)
     return [s.name for s in worker.skills]
+
+
+async def replace_skills(db: AsyncSession, user_id: UUID, skills: Union[str, List[str]]):
+    skill_names = await _normalize_skills(skills)
+    worker = await get_worker_panic(db, user_id)
+
+    worker.skills = []
+    await db.commit()
+
+    return await add_skills(db, user_id, skill_names)
