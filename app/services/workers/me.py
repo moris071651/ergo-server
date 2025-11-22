@@ -43,3 +43,11 @@ async def create_worker(
         await db.refresh(new_worker)
 
     return CurrentWorkerResponse.model_validate(new_worker)
+
+
+async def get_my_worker_profile(
+    db: Session,
+    user_id: UUID
+) -> CurrentWorkerResponse:
+    worker = await get_worker_panic(db, user_id)
+    return CurrentWorkerResponse.model_validate(worker)
