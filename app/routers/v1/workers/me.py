@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, Request, status
 
 from app.db.session import Session, get_db
@@ -10,16 +11,16 @@ router = APIRouter(prefix='/me')
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
-async def activate_worker(
+async def create_worker(
     req: Request,
-    worker_data: WorkerCreate,
+    worker_data: Optional[WorkerCreate],
     db: Session = Depends(get_db)
 ) -> CurrentWorkerResponse:
     if req.state.user_id is None:
         raise UserNotLoggedInException()
 
     user_id = req.state.user_id
-    return await service.activate_worker(db, user_id, worker_data)
+    return await service.create_worker(db, user_id, worker_data)
 
 
 @router.get('/')
