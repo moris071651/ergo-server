@@ -51,3 +51,20 @@ async def get_my_worker_profile(
 ) -> CurrentWorkerResponse:
     worker = await get_worker_panic(db, user_id)
     return CurrentWorkerResponse.model_validate(worker)
+
+
+async def update_worker_profile(
+    db: Session,
+    user_id: UUID,
+    data: WorkerUpdate
+) -> CurrentWorkerResponse:
+    worker = await get_worker_panic(db, user_id)
+    update_data = data.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(worker, field, value)
+
+    await db.commit()
+    await db.refresh(worker)
+
+    return CurrentWorkerResponse.model_validate(worker)
