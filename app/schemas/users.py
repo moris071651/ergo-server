@@ -12,6 +12,7 @@ class UserResponse(BaseModel):
     last_name: str
     created_at: datetime
 
+
 class CurrentUserResponse(UserResponse):
     updated_at: datetime
 
