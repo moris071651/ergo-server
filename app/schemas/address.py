@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, model_validator
 from uuid import UUID
 from typing import Optional
@@ -30,8 +31,31 @@ class GeoLocation(BaseModel):
     country: Optional[str]
 
 
-class AddressResponse(AddressCreate, GeoLocation):
+class PublicAddressResponse(BaseModel):
     id: UUID
+    lon: float
+    lat: float
+    label: str
+    street: Optional[str]
+    house_number: Optional[str]
+    city: Optional[str]
+    postal_code: Optional[str]
+    country: Optional[str]
 
     class Config:
         from_attributes = True
+
+    class Config:
+        from_attributes = True
+
+
+class AddressResponse(PublicAddressResponse):
+    updated_at: datetime
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MainAddressUpdate(BaseModel):
+    address_id: UUID
