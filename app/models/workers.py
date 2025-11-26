@@ -15,8 +15,13 @@ class Worker(Base):
     )
 
     bio = Column(String, nullable=True)
-    service_radius_km = Column(Integer, nullable=True)
     experience_years = Column(Integer, nullable=True)
+
+    service_radius_km = Column(Integer, nullable=True)
+    address_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("addresses.id")
+    )
 
     available = Column(Boolean, default=True, nullable=False)
 
@@ -42,4 +47,9 @@ class Worker(Base):
         "Skill",
         secondary=worker_skill_table,
         lazy="joined"
+    )
+    address = relationship(
+        "Address",
+        lazy="joined",
+        uselist=False
     )
