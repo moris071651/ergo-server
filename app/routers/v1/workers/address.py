@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Request
 from app.db.session import Session, get_db
 from app.exceptions.auth import UserNotLoggedInException
 
+from app.services.workers import address as service
 from app.schemas.address import AddressResponse, MainAddressUpdate
 
 
