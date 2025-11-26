@@ -6,6 +6,7 @@ from uuid import UUID
 from app.models.address import Address
 from app.schemas.address import AddressCreate, AddressResponse, AddressUpdate
 from app.utils.geo import reverse_geocode
+from app.utils.workers import get_worker
 
 async def get_all_addresses(db: AsyncSession, user_id: UUID) -> List[AddressResponse]:
     result = await db.execute(select(Address).where(Address.user_id == user_id))
@@ -75,6 +76,11 @@ async def remove_address(db: AsyncSession, user_id: UUID, address_id: UUID) -> N
 
     if not address:
         raise Exception()
+    
+    worker = await get_worker(db, user_id)
+    if worker and not worker.deleted_at:
+        if worker.address_id == address.id:
+            raise Exception()
     
     await db.delete(address)
     await db.commit()

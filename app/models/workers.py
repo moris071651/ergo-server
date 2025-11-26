@@ -20,7 +20,8 @@ class Worker(Base):
     service_radius_km = Column(Integer, nullable=True)
     address_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("addresses.id")
+        ForeignKey("addresses.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     available = Column(Boolean, default=True, nullable=False)
