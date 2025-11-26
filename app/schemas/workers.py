@@ -22,6 +22,7 @@ class CurrentWorkerResponse(WorkerResponse):
 
 
 class WorkerCreate(BaseModel):
+    address_id: UUID
     bio: Optional[str]
     service_radius_km: Optional[int]
     experience_years: Optional[int]
