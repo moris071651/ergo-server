@@ -52,7 +52,7 @@ async def remove_skills(
     req: Request,
     skills: Union[str, List[str]] = Query(),
     db: Session = Depends(get_db)
-) -> List[str]:
+):
     if req.state.user_id is None:
         raise UserNotLoggedInException()
 

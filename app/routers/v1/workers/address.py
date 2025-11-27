@@ -42,3 +42,8 @@ async def get_worker_main_address(
     db: Session = Depends(get_db)
 ) -> AddressResponse:
     return await service.get_worker_main_address(db, user_id)
+
+
+router = APIRouter()
+router.include_router(router_me)
+router.include_router(router_global)
