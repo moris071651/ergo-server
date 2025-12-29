@@ -32,3 +32,16 @@ async def get_my_listings(
 
     user_id = req.state.user_id
     return await service.get_my_listings(db, user_id)
+
+
+@router.get("/{listing_id}")
+async def get_my_listing_by_id(
+    req: Request,
+    listing_id: UUID,
+    db: Session = Depends(get_db)
+) -> ListingResponseOwner:
+    if req.state.user_id is None:
+        raise UserNotLoggedInException()
+
+    user_id = req.state.user_id
+    return await service.get_my_listing_by_id(db, user_id, listing_id)
