@@ -27,3 +27,19 @@ async def get_listings_by_worker(
     listings = result.scalars().all()
 
     return [ListingResponsePublic.model_validate(l) for l in listings]
+
+
+async def get_listings(
+    db: Session
+):
+    stmt = (
+        select(Listing)
+        .where(Listing.is_active == True)
+        .where(Listing.deleted_at.is_(None))
+        .order_by(Listing.created_at.desc())
+    )
+
+    result = await db.execute(stmt)
+    listings = result.scalars().all()
+
+    return [ListingResponsePublic.model_validate(l) for l in listings]
