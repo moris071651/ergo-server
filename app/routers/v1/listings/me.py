@@ -59,3 +59,16 @@ async def edit_listing(
 
     user_id = req.state.user_id
     return await service.edit_listing(db, user_id, listing_id, data)
+
+
+@router.delete("/{listing_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_listing(
+    req: Request,
+    listing_id: UUID,
+    db: Session = Depends(get_db)
+):
+    if req.state.user_id is None:
+        raise UserNotLoggedInException()
+
+    user_id = req.state.user_id
+    await service.delete_listing(db, user_id, listing_id)
