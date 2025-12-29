@@ -22,3 +22,11 @@ async def get_listings(
     db: Session = Depends(get_db)
 ) -> List[ListingResponsePublic]:
     return await service.get_listings(db)
+
+
+@router.get("/listings/{listing_id}")
+async def get_listing_by_id(
+    listing_id: UUID,
+    db: Session = Depends(get_db)
+) -> ListingResponsePublic:
+    return await service.get_listing_by_id(db, listing_id)
