@@ -45,3 +45,17 @@ async def get_my_listing_by_id(
 
     user_id = req.state.user_id
     return await service.get_my_listing_by_id(db, user_id, listing_id)
+
+
+@router.patch("/{listing_id}")
+async def edit_listing(
+    req: Request,
+    listing_id: UUID,
+    data: ListingUpdate,
+    db: Session = Depends(get_db)
+) -> ListingResponseOwner:
+    if req.state.user_id is None:
+        raise UserNotLoggedInException()
+
+    user_id = req.state.user_id
+    return await service.edit_listing(db, user_id, listing_id, data)
