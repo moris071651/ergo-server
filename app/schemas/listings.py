@@ -81,3 +81,8 @@ class ListingResponsePublic(BaseModel):
 
     class Config:
         from_attributes = True
+
+    
+class ListingResponseOwner(ListingResponsePublic):
+    updated_at: datetime
+    is_active: bool
