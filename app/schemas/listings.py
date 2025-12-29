@@ -52,3 +52,32 @@ class ListingUpdate(BaseModel):
             raise ValueError("The duration_days could not be less then 1.")
         
         return self
+
+
+class ListingResponsePublic(BaseModel):
+    id: UUID
+    worker_id: UUID
+
+    title: str
+    description: str | None
+
+    price_cents: int
+    currency_iso_code: Currency
+    price_str: str | None = None
+
+    allow_recurring: bool = False
+    visit_required: bool = False
+
+    duration_days: int
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def fill_price_str(self):
+        if self.price_str is None:
+            formatter = CurrencyFormatter(str(self.currency_iso_code))
+            self.price_str = formatter.get_money_format(self.price_cents / 100)
+        
+        return self
+
+    class Config:
+        from_attributes = True
