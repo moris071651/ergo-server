@@ -27,3 +27,28 @@ class ListingCreate(BaseModel):
             raise ValueError("The duration_days could not be less then 1.")
         
         return self
+
+
+class ListingUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    is_active: bool | None = None
+    price_cents: int | None = None
+    currency_iso_code: Currency | None = None
+    allow_recurring: bool | None = None
+    duration_days: int | None = None
+    visit_required: bool | None = None
+
+    @model_validator(mode="after")
+    def check_price(self):
+        if self.price_cents is not None and self.price_cents < 0:
+            raise ValueError("The price could not be negative.")
+        
+        return self
+    
+    @model_validator(mode="after")
+    def check_duration(self):
+        if self.duration_days is not None and self.duration_days < 1:
+            raise ValueError("The duration_days could not be less then 1.")
+        
+        return self
