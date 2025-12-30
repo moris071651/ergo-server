@@ -97,3 +97,25 @@ async def edit_listing(
     await db.refresh(listing)
 
     return ListingResponseOwner.model_validate(listing)
+
+
+async def delete_listing(
+    db: Session,
+    user_id: UUID,
+    listing_id: UUID
+):
+    stmt = (
+        select(Listing)
+        .where(Listing.id == listing_id)
+        .where(Listing.owner_id == user_id)
+        .where(Listing.deleted_at.is_(None))
+    )
+
+    result = await db.execute(stmt)
+    listing = result.scalars().first()
+
+    if not listing:
+        raise Exception()
+
+    listing.deleted_at = datetime.utcnow()
+    await db.commit()
