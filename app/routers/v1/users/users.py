@@ -1,9 +1,8 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends
-from app.db.session import Session, get_db
+from fastapi import APIRouter
+from app.db.session import DBSessionDep
 from app.services.users import users as service
-from app.utils.storage import get_storage_adapter
-from app.utils.storage.base import StorageAdapter
+from app.utils.storage import StorageAdapterDep
 
 
 router = APIRouter(tags=['Users'])
@@ -17,8 +16,8 @@ async def get_users():
 @router.get("/{user_id}")
 async def get_user(
     user_id: UUID,
-    db: Session = Depends(get_db),
-    storage: StorageAdapter = Depends(get_storage_adapter)
+    db: DBSessionDep,
+    storage: StorageAdapterDep,
 ):    
     return await service.get_user(user_id, db, storage)
 
@@ -26,7 +25,7 @@ async def get_user(
 @router.get("/{user_id}/picture")
 async def get_user_picture(
     user_id: UUID,
-    db: Session = Depends(get_db),
-    storage: StorageAdapter = Depends(get_storage_adapter)
+    db: DBSessionDep,
+    storage: StorageAdapterDep,
 ):    
     return await service.get_user_picture(user_id, db, storage)

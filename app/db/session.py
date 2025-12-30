@@ -1,3 +1,4 @@
+from typing import Annotated
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -24,3 +25,9 @@ async def get_db() -> AsyncSession:
         except:
             await session.rollback()
             raise
+
+
+DBSessionDep = Annotated[
+    AsyncSession,
+    get_db
+]

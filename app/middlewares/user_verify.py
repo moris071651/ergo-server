@@ -53,25 +53,25 @@ async def get_current_user_panic(req: Request):
     return user
 
 
-CurrentUserId = Annotated[
+CurrentUserIdDep = Annotated[
     UUID | None,
     Depends(get_current_user_id)
 ]
 
 
-CurrentUserIdPanic = Annotated[
+CurrentUserIdPanicDep = Annotated[
     UUID,
     Depends(get_current_user_id_panic)
 ]
 
 
-CurrentUser = Annotated[
+CurrentUserDep = Annotated[
     User | None,
     Depends(get_current_user)
 ]
 
 
-CurrentUserPanic = Annotated[
+CurrentUserPanicDep = Annotated[
     User,
     Depends(get_current_user_panic)
 ]

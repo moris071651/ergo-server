@@ -1,3 +1,6 @@
+from typing import Annotated
+
+from fastapi import Depends, File, UploadFile
 from app.utils.storage.base import StorageAdapter
 from app.utils.storage.factory import create_storage_adapter
 
@@ -11,3 +14,7 @@ def get_storage_adapter() -> StorageAdapter:
         _adapter = create_storage_adapter()
         
     return _adapter
+
+
+FileArg = Annotated[UploadFile, File(...)]
+StorageAdapterDep = Annotated[StorageAdapter, Depends(get_storage_adapter)]

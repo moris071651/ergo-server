@@ -1,11 +1,12 @@
+from typing import Annotated
 from fastapi import APIRouter, Depends, File, Request, Response, UploadFile, status
 from app.config.settings import AUTH_COOKIE_KEY
-from app.db.session import Session, get_db
+from app.db.session import DBSessionDep
+from app.middlewares.user_verify import CurrentUserIdPanicDep
 
-from app.exceptions.auth import UserNotLoggedInException
 from app.schemas.users import CurrentUserResponse, UpdateUserRequest, UserPictureResponse
 from app.services.users import me as service
-from app.utils.storage import get_storage_adapter
+from app.utils.storage import FileArg, StorageAdapterDep, get_storage_adapter
 from app.utils.storage.base import StorageAdapter
 from app.utils.token import revoke_token
 
@@ -15,27 +16,19 @@ router = APIRouter(prefix='/me', tags=['Current user'])
 
 @router.get('')
 async def get_current_user(
-    req: Request,
-    db: Session = Depends(get_db),
-    storage: StorageAdapter = Depends(get_storage_adapter)
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep,
+    storage: StorageAdapterDep
 ) -> CurrentUserResponse:
-    if req.state.user_id is None:
-        raise UserNotLoggedInException()
-
-    user_id = req.state.user_id
     return await service.get_current_user(user_id, db, storage)
 
 
 @router.patch('')
 async def update_current_user(
-    req: Request,
     update: UpdateUserRequest,
-    db: Session = Depends(get_db)
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
 ) -> CurrentUserResponse:
-    if req.state.user_id is None:
-        raise UserNotLoggedInException()
-
-    user_id = req.state.user_id
     return await service.update_current_user(user_id, update, db)
 
 
@@ -43,12 +36,9 @@ async def update_current_user(
 async def deactivate_current_user(
     req: Request,
     res: Response,
-    db: Session = Depends(get_db)
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
 ):
-    if req.state.user is None:
-        raise UserNotLoggedInException()
-    
-    user_id = req.state.user_id
     await service.deactivate_current_user(user_id, db)
 
     await revoke_token(
@@ -62,28 +52,20 @@ async def deactivate_current_user(
 
 @router.get('/picture')
 async def get_current_user_picture(
-    req: Request,
-    db: Session = Depends(get_db),
-    storage: StorageAdapter = Depends(get_storage_adapter)
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep,
+    storage: StorageAdapterDep
 ) -> UserPictureResponse:
-    if req.state.user_id is None:
-        raise UserNotLoggedInException()
-
-    user_id = req.state.user_id
     return await service.get_current_user_picture(user_id, db, storage)
 
 
 @router.put('/picture')
 async def update_current_user_picture(
-    req: Request,
-    file: UploadFile = File(...),
-    storage: StorageAdapter = Depends(get_storage_adapter),
-    db: Session = Depends(get_db)
+    file: FileArg,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep,
+    storage: StorageAdapterDep
 ) -> UserPictureResponse:
-    if req.state.user_id is None:
-        raise UserNotLoggedInException()
-
-    user_id = req.state.user_id
     return await service.update_current_user_picture(
         file_bytes = await file.read(),
         file_name = file.filename,
@@ -95,14 +77,10 @@ async def update_current_user_picture(
 
 @router.delete('/picture')
 async def delete_current_user_picture(
-    req: Request,
     res: Response,
-    db: Session = Depends(get_db),
-    storage: StorageAdapter = Depends(get_storage_adapter)
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep,
+    storage: StorageAdapterDep
 ):
-    if req.state.user_id is None:
-        raise UserNotLoggedInException()
-
-    user_id = req.state.user_id
     await service.delete_current_user_picture(user_id, db, storage)
     res.status_code = status.HTTP_204_NO_CONTENT
