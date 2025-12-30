@@ -29,3 +29,20 @@ async def create_offering(
 
     await db.refresh(listing)
     return ListingResponseOwner.model_validate(listing)
+
+
+async def get_my_listings(
+    db: Session,
+    user_id: UUID
+) -> List[ListingResponseOwner]:
+    stmt = (
+        select(Listing)
+        .where(Listing.owner_id == user_id)
+        .where(Listing.deleted_at.is_(None))
+        .order_by(Listing.created_at.desc())
+    )
+
+    result = await db.execute(stmt)
+    listings = result.scalars().all()
+
+    return [ListingResponseOwner.model_validate(l) for l in listings]
