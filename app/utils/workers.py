@@ -1,6 +1,6 @@
 from typing import Optional
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import exists, select
 
 from app.db.session import Session
 from app.models.workers import Worker
@@ -27,3 +27,9 @@ async def get_worker_panic(db: Session, user_id: UUID, include_deleted: bool = F
         raise Exception("Worker not found")
     
     return worker
+
+
+async def worker_exists(db: Session, user_id: UUID):
+    stmt = select(exists().where(Worker.user_id == user_id, Worker.deleted_at.is_not(None)))
+    result = await db.execute(stmt)
+    return result.scalar()
