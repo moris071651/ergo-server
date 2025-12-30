@@ -25,6 +25,7 @@ class Address(Base):
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
 
     user = relationship("User", back_populates="addresses")
+    bookings = relationship("Booking", back_populates="address")
 
     def __repr__(self):
         return f"<Address {self.label} ({self.city}, {self.country})>"
