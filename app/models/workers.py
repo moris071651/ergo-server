@@ -24,6 +24,10 @@ class Worker(Base):
         nullable=True,
     )
 
+    stripe_account_id = Column(String, nullable=True)
+    charges_enabled = Column(Boolean, default=False)
+    payouts_enabled = Column(Boolean, default=False)
+    
     available = Column(Boolean, default=True, nullable=False)
 
     created_at = Column(

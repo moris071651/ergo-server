@@ -40,3 +40,7 @@ s3_cfg = storage_cfg.get("aws", {})
 STORAGE_AWS_REGION = os.getenv("AWS_REGION", s3_cfg.get("region", "us-east-1"))
 STORAGE_AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", s3_cfg.get("access_key", "minioadmin"))
 STORAGE_AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", s3_cfg.get("secret_key", "minioadmin"))
+
+stripe_cfg = storage_cfg.get("stripe", {})
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", s3_cfg.get("secret-key"), None)
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", s3_cfg.get("webhook-secret"), None)

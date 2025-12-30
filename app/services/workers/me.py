@@ -3,11 +3,13 @@ from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select
+import stripe
 from app.db.session import Session
 from app.models.address import Address
 from app.models.workers import Worker
 from app.schemas.workers import CurrentWorkerResponse, WorkerCreate, WorkerUpdate
 from app.services.workers.skills import add_skills
+from app.utils.user import fetch_user
 from app.utils.workers import get_worker, get_worker_panic
 
 async def _get_address(db, user_id, address_id):
@@ -15,13 +17,23 @@ async def _get_address(db, user_id, address_id):
     result = await db.execute(stmt)
     return result.scalars().first()
 
+async def _create_stripe_worker_account(email: str) -> str:
+    account = stripe.Account.create(
+        type="express",
+        email=email,
+        capabilities={
+            "transfers": {"requested": True},
+        },
+    )
+    return account.id
+
 
 async def create_worker(
     db: Session,
     user_id: UUID,
     data: Optional[WorkerCreate]
 ) -> CurrentWorkerResponse:
-    worker = await get_worker(db, user_id,include_deleted=True)
+    worker = await get_worker(db, user_id, include_deleted=True)
 
     if worker is not None:
         if worker.deleted_at is not None:
@@ -54,13 +66,22 @@ async def create_worker(
 
     if address is None:
         raise Exception("Address not found or does not belong to this user.")
+    
+    user = await fetch_user(db, user_id)
+    if not user:
+        raise Exception()
+    
+    stripe_account_id = await _create_stripe_worker_account(
+        email=user.email
+    )
 
     new_worker = Worker(
-        user_id=user_id,
+        user_id=user.id,
         address_id=address.id,
         bio=data.bio,
         service_radius_km=data.service_radius_km,
         experience_years=data.experience_years,
+        stripe_account_id=stripe_account_id
     )
 
     db.add(new_worker)
