@@ -46,3 +46,24 @@ async def get_my_listings(
     listings = result.scalars().all()
 
     return [ListingResponseOwner.model_validate(l) for l in listings]
+
+
+async def get_my_listing_by_id(
+    db: Session,
+    user_id: UUID,
+    listing_id: UUID
+) -> ListingResponseOwner:
+    stmt = (
+        select(Listing)
+        .where(Listing.id == listing_id)
+        .where(Listing.owner_id == user_id)
+        .where(Listing.deleted_at.is_(None))
+    )
+
+    result = await db.execute(stmt)
+    listing = result.scalars().first()
+
+    if not listing:
+        raise Exception()
+
+    return ListingResponseOwner.model_validate(listing)
