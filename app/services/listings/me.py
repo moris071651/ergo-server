@@ -1,0 +1,31 @@
+from uuid import UUID
+from typing import List
+from sqlalchemy import select
+from datetime import datetime
+
+from app.db.session import Session
+from app.models.listing import Listing
+from app.schemas.listings import ListingCreate, ListingUpdate, ListingResponseOwner
+
+
+async def create_offering(
+    db: Session,
+    user_id: UUID,
+    data: ListingCreate
+) -> ListingResponseOwner:
+    listing = Listing(
+        worker_id=user_id,
+        title=data.title,
+        description=data.description,
+        price_cents=data.price_cents,
+        currency_iso_code=str(data.currency_iso_code),
+        allow_recurring=data.allow_recurring,
+        visit_required=data.visit_required,
+        duration_days=data.duration_days
+    )
+
+    db.add(listing)
+    await db.commit()
+
+    await db.refresh(listing)
+    return ListingResponseOwner.model_validate(listing)
