@@ -67,3 +67,33 @@ async def get_my_listing_by_id(
         raise Exception()
 
     return ListingResponseOwner.model_validate(listing)
+
+
+async def edit_listing(
+    db: Session,
+    user_id: UUID,
+    listing_id: UUID,
+    data: ListingUpdate
+) -> ListingResponseOwner:
+    stmt = (
+        select(Listing)
+        .where(Listing.id == listing_id)
+        .where(Listing.owner_id == user_id)
+        .where(Listing.deleted_at.is_(None))
+    )
+
+    result = await db.execute(stmt)
+    listing = result.scalars().first()
+
+    if not listing:
+        raise Exception()
+
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(listing, key, value)
+
+    listing.updated_at = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(listing)
+
+    return ListingResponseOwner.model_validate(listing)
