@@ -1,27 +1,77 @@
+from typing import Annotated
 from uuid import UUID
-from fastapi import Request
-from starlette.types import ASGIApp
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Depends, Request
 
 from app.db.session import get_db
-from app.utils.user import user_exists
+from app.exceptions.auth import UserNotLoggedInException
+from app.models.users import User
+from app.utils.user import fetch_user, user_exists
 
 
-class UserVerifyMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: ASGIApp):
-        super().__init__(app)
+async def get_current_user_id(req: Request):
+    payload = getattr(req.state, "jwt", None)
+    user_id = payload.get("id") if payload else None
 
-    async def dispatch(self, req: Request, call_next):
-        req.state.user_id = None
+    ret = None
+    if user_id:
+        async for db in get_db():
+            if await user_exists(db, user_id):
+                ret = UUID(user_id)
+            break
 
-        payload = getattr(req.state, "jwt", None)
-        user_id = payload.get("id") if payload else None
+    return ret
 
-        if user_id:
-            async for db in get_db():
-                if await user_exists(db, user_id):
-                    req.state.user_id = UUID(user_id)
-                break
 
-        response = await call_next(req)
-        return response
+async def get_current_user_id_panic(req: Request):
+    user_id = get_current_user_id(req)
+
+    if not user_id:
+        raise UserNotLoggedInException()
+
+    return user_id
+
+
+async def get_current_user(req: Request):
+    payload = getattr(req.state, "jwt", None)
+    user_id = payload.get("id") if payload else None
+
+    ret = None
+    if user_id:
+        async for db in get_db():
+            ret = await fetch_user(db, user_id)
+            break
+
+    return ret
+
+
+async def get_current_user_panic(req: Request):
+    user = get_current_user(req)
+
+    if not user:
+        raise UserNotLoggedInException()
+    
+    return user
+
+
+CurrentUserId = Annotated[
+    UUID | None,
+    Depends(get_current_user_id)
+]
+
+
+CurrentUserIdPanic = Annotated[
+    UUID,
+    Depends(get_current_user_id_panic)
+]
+
+
+CurrentUser = Annotated[
+    User | None,
+    Depends(get_current_user)
+]
+
+
+CurrentUserPanic = Annotated[
+    User,
+    Depends(get_current_user_panic)
+]
