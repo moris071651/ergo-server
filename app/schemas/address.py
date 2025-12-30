@@ -45,16 +45,10 @@ class PublicAddressResponse(BaseModel):
     class Config:
         from_attributes = True
 
-    class Config:
-        from_attributes = True
-
 
 class AddressResponse(PublicAddressResponse):
     updated_at: datetime
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class MainAddressUpdate(BaseModel):
