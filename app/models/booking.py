@@ -21,8 +21,9 @@ class Booking(Base):
     payment_state = Column(Enum(BookingPaymentState), nullable=False, default=BookingPaymentState.CREATED)
 
     payment_intent_id = Column(String(64), nullable=True, index=True)
-    paid_amount = Column(Integer, nullable=True)
+    charge_id = Column(String, nullable=True, index=True)
     paid_currency = Column(String(3), nullable=True)
+    paid_amount = Column(Integer, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

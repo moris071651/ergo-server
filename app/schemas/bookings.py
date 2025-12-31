@@ -9,6 +9,7 @@ from app.schemas.address import PublicAddressResponse
 
 class BookingState(str, Enum):
     CREATED = "created"
+    WAITING_APPROVAL = "waiting-approval"
     PENDING_PAYMENT = "pending-payment"
     PENDING = "pending"
     IN_PROGRESS = "in-progress"
@@ -22,6 +23,8 @@ class BookingPaymentState(str, Enum):
     IN_PROGRESS = "in-progress"
     FAILED = "failed"
     PAID = "paid"
+    EXPIRED = "expired"
+    REFUNDED = "refunded"
 
 
 class BookingCreate(BaseModel):
