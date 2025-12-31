@@ -66,9 +66,10 @@ class BookingResponseBase(BaseModel):
         from_attributes = True
 
 
-class BookingResponseWorker(BaseModel):
+class BookingResponseWorker(BookingResponseBase):
     customer_id: UUID
 
 
-class BookingResponseCustomer(BaseModel):
+class BookingResponseCustomer(BookingResponseBase):
     worker_id: UUID
+    client_secret: str | None = None
