@@ -21,6 +21,60 @@ async def create_booking(
     return await service.create_booking(db, user_id, listing_id, data)
 
 
+@router.post("/bookings/{booking_id}/approve")
+async def approve_booking(
+    booking_id: UUID,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
+):
+    return await service.approve_booking(db, user_id, booking_id)
+
+
+@router.post("/bookings/{booking_id}/start")
+async def start_booking(
+    booking_id: UUID,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
+):
+    return await service.start_booking(db, user_id, booking_id)
+
+
+@router.post("/bookings/{booking_id}/finish")
+async def finish_booking(
+    booking_id: UUID,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
+):
+    return await service.finish_booking(db, user_id, booking_id)
+
+
+@router.post("/bookings/{booking_id}/finish/confirm")
+async def confirm_finish_booking(
+    booking_id: UUID,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
+):
+    return await service.confirm_finish_booking(db, user_id, booking_id)
+
+
+@router.post("/bookings/{booking_id}/finish/deny")
+async def deny_finish_booking(
+    booking_id: UUID,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
+):
+    return await service.deny_finish_booking(db, user_id, booking_id)
+
+
+@router.post("/bookings/{booking_id}/cancel")
+async def cancel_booking(
+    booking_id: UUID,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
+):
+    return await service.cancel_booking(db, user_id, booking_id)
+
+
 @router.get("/workers/me/bookings")
 async def list_worker_bookings(
     db: DBSessionDep,
@@ -55,48 +109,3 @@ async def get_customer_booking_by_id(
     user_id: CurrentUserIdPanicDep
 ) -> BookingResponseCustomer:
     return await service.get_customer_booking_by_id(db, user_id, booking_id)
-
-
-@router.post("/workers/me/bookings/{booking_id}/confirm")
-async def worker_confirm_booking(
-    booking_id: UUID,
-    db: DBSessionDep,
-    user_id: CurrentUserIdPanicDep
-) -> BookingResponseWorker:
-    return await service.worker_confirm_booking(db, user_id, booking_id)
-
-
-@router.post("/bookings/{booking_id}/cancel")
-async def cancel_booking(
-    booking_id: UUID,
-    db: DBSessionDep,
-    user_id: CurrentUserIdPanicDep
-) -> BookingResponseWorker:
-    return await service.cancel_booking(db, user_id, booking_id)
-
-
-@router.post("/workers/me/bookings/{booking_id}/finish")
-async def worker_finish_booking(
-    booking_id: UUID,
-    db: DBSessionDep,
-    user_id: CurrentUserIdPanicDep
-) -> BookingResponseWorker:
-    return await service.worker_finish_booking(db, user_id, booking_id)
-
-
-@router.post("/users/me/bookings/{booking_id}/finish/confirm")
-async def customer_confirm_finish(
-    booking_id: UUID,
-    db: DBSessionDep,
-    user_id: CurrentUserIdPanicDep
-) -> BookingResponseCustomer:
-    return await service.customer_confirm_finish(db, user_id, booking_id)
-
-
-@router.post("/users/me/bookings/{booking_id}/finish/deny")
-async def customer_deny_finish(
-    booking_id: UUID,
-    db: DBSessionDep,
-    user_id: CurrentUserIdPanicDep
-) -> BookingResponseCustomer:
-    return await service.customer_deny_finish(db, user_id, booking_id)
