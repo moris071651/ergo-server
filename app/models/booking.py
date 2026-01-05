@@ -14,8 +14,8 @@ class Booking(Base):
     worker_id = Column(UUID(as_uuid=True), ForeignKey("workers.user_id"), nullable=False)
     address_id = Column(UUID(as_uuid=True), ForeignKey("addresses.id"), nullable=False)
 
-    start_at = Column(Date(timezone=True), nullable=False)
-    end_at = Column(Date(timezone=True), nullable=False)
+    start_at = Column(Date(), nullable=False)
+    end_at = Column(Date(), nullable=False)
 
     state = Column(Enum(BookingState), nullable=False, default=BookingState.CREATED)
     payment_state = Column(Enum(BookingPaymentState), nullable=False, default=BookingPaymentState.CREATED)

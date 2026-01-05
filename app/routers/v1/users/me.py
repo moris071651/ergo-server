@@ -1,25 +1,23 @@
-from typing import Annotated
-from fastapi import APIRouter, Depends, File, Request, Response, UploadFile, status
+from fastapi import APIRouter, Request, Response, status
 from app.config.settings import AUTH_COOKIE_KEY
 from app.db.session import DBSessionDep
 from app.middlewares.user_verify import CurrentUserIdPanicDep
 
 from app.schemas.users import CurrentUserResponse, UpdateUserRequest, UserPictureResponse
 from app.services.users import me as service
-from app.utils.storage import FileArg, StorageAdapterDep, get_storage_adapter
-from app.utils.storage.base import StorageAdapter
+from app.utils.storage import FileArg, StorageAdapterDep
 from app.utils.token import revoke_token
 
 
 router = APIRouter(prefix='/me', tags=['Current user'])
 
 
-@router.get('')
+@router.get('', response_model=CurrentUserResponse)
 async def get_current_user(
     db: DBSessionDep,
     user_id: CurrentUserIdPanicDep,
     storage: StorageAdapterDep
-) -> CurrentUserResponse:
+):
     return await service.get_current_user(user_id, db, storage)
 
 

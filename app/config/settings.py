@@ -4,8 +4,8 @@ import toml
 data = {}
 try:
     with open('config.toml') as f:
-        data = toml.load()
-except:
+        data = toml.load(f)
+except Exception as e:
     pass
 
 jwt_cfg = data.get("jwt", {})
@@ -31,6 +31,7 @@ DATABASE_FUTURE = database_cfg.get("future", True)
 
 bucket_cfg = data.get("bucket", {})
 BUCKET_USER_PICTURE = bucket_cfg.get("user_picture", "user-picture")
+BUCKET_LISTING_IMAGES = bucket_cfg.get("listing_images", "listing-images")
 
 storage_cfg = data.get("storage", {})
 STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", storage_cfg.get("provider", "minio"))
@@ -41,6 +42,6 @@ STORAGE_AWS_REGION = os.getenv("AWS_REGION", s3_cfg.get("region", "us-east-1"))
 STORAGE_AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", s3_cfg.get("access_key", "minioadmin"))
 STORAGE_AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", s3_cfg.get("secret_key", "minioadmin"))
 
-stripe_cfg = storage_cfg.get("stripe", {})
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", s3_cfg.get("secret-key"), None)
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", s3_cfg.get("webhook-secret"), None)
+stripe_cfg = data.get("stripe", {})
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", stripe_cfg.get("secret_key", None))
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", stripe_cfg.get("webhook_secret", None))

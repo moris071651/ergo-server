@@ -34,3 +34,10 @@ class Listing(Base):
 
     owner = relationship("Worker", back_populates="listings")
     bookings = relationship("Booking", back_populates="listing")
+
+    images = relationship(
+        "ListingImage",
+        back_populates="listing",
+        cascade="all, delete-orphan",
+        order_by="ListingImage.sort_order"
+    )

@@ -86,3 +86,13 @@ class ListingResponsePublic(BaseModel):
 class ListingResponseOwner(ListingResponsePublic):
     updated_at: datetime
     is_active: bool
+
+
+class ListingImageResponse(BaseModel):
+    id: UUID
+    url: str
+    is_primary: bool
+    sort_order: int
+
+    class Config:
+        from_attributes = True

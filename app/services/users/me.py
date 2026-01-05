@@ -108,7 +108,7 @@ async def update_current_user_picture(
     if not mime_type.startswith("image/"):
         raise NotImageFormatException(user_id, ext)
 
-    key = f"{user_id}/{uuid4()}{ext}"
+    key = f"pfp/{user_id}/{uuid4()}{ext}"
 
     try:
         storage.put_object("user-pictures", key, file_bytes, content_type=mime_type)
