@@ -7,8 +7,8 @@ from app.services.workers import address as service
 from app.schemas.address import AddressResponse, MainAddressUpdate
 
 
-router_me = APIRouter(prefix='/me/address')
-router_global = APIRouter(prefix='/{user_id}/address')
+router_me = APIRouter(prefix='/me/address', tags=["Worker's addresses"])
+router_global = APIRouter(prefix='/{user_id}/address', tags=["Worker's addresses"])
 
 
 @router_me.get('/')

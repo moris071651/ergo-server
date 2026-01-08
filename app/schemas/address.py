@@ -11,9 +11,9 @@ class AddressCreate(BaseModel):
 
 
 class AddressUpdate(BaseModel):
-    lon: Optional[float]
-    lat: Optional[float]
-    label: Optional[str]
+    lon: Optional[float] = None
+    lat: Optional[float] = None
+    label: Optional[str] = None
 
     @model_validator(mode="after")
     def check_lon_lat_pair(self):

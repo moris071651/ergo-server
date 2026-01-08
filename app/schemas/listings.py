@@ -56,7 +56,7 @@ class ListingUpdate(BaseModel):
 
 class ListingResponsePublic(BaseModel):
     id: UUID
-    worker_id: UUID
+    owner_id: UUID
 
     title: str
     description: str | None

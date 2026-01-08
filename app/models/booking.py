@@ -1,3 +1,4 @@
+from uuid import uuid4
 from sqlalchemy import UUID, Column, Date, DateTime, Enum, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 from app.db.session import Base
@@ -7,7 +8,7 @@ from app.schemas.bookings import BookingPaymentState, BookingState
 class Booking(Base):
     __tablename__ = "bookings"
 
-    id = Column(UUID(as_uuid=True), primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
 
     listing_id = Column(UUID(as_uuid=True), ForeignKey("listings.id"), nullable=False)
     customer_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
@@ -31,5 +32,6 @@ class Booking(Base):
 
     listing = relationship("Listing", back_populates="bookings")
     worker = relationship("Worker", back_populates="bookings")
-    customer = relationship("User", back_populates="bookings")
+    user = relationship("User", back_populates="bookings")
     address = relationship("Address", back_populates="bookings")
+    reasons = relationship("BookingReason", back_populates="bookings")

@@ -6,7 +6,7 @@ from app.models.users import User
 
 
 async def fetch_user(db: Session, user_id: UUID):
-    stmt = select(User).filter(User.id == user_id)
+    stmt = select(User).where(User.id == user_id)
     result = await db.execute(stmt)
     return result.scalars().first()
 

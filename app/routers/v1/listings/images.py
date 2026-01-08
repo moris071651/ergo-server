@@ -11,7 +11,7 @@ from app.utils.storage import StorageAdapterDep
 
 
 ImagesDep = Annotated[List[UploadFile], File(...)]
-router = APIRouter()
+router = APIRouter(tags=["Listing Images"])
 
 
 @router.get("/listings/{listing_id}/images")

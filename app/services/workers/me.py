@@ -18,6 +18,8 @@ async def _get_address(db, user_id, address_id):
     return result.scalars().first()
 
 
+# TODO: check for non existing skills before the creation of the worker
+# TODO: and throw error before the db transaction
 async def create_worker(
     db: Session,
     user_id: UUID,

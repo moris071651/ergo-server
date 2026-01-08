@@ -7,7 +7,7 @@ from app.services.listings import listings as service
 from app.schemas.listings import ListingResponsePublic
 
 
-router = APIRouter()
+router = APIRouter(tags=["Listing Management"])
 
 
 @router.get("/workers/{user_id}/listings")

@@ -18,5 +18,5 @@ class BookingReason(Base):
     reason = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
-    booking = relationship("Booking", back_populates="reasons")
+    bookings = relationship("Booking", back_populates="reasons")
     user = relationship("User")

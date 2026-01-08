@@ -7,7 +7,7 @@ from app.services.workers import me as service
 from app.schemas.workers import CurrentWorkerResponse, WorkerCreate, WorkerUpdate
 
 
-router = APIRouter(prefix='/me')
+router = APIRouter(prefix='/me', tags=["Current worker"])
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)

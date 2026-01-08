@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from uuid import UUID
-from fastapi import APIRouter, Body, Depends, Request, Response, status
+from fastapi import APIRouter, Request, Response, status
 
-from app.db.session import Session, get_db
+from app.db.session import DBSessionDep
 from app.config.settings import AUTH_COOKIE_KEY, AUTH_COOKIE_HTTPONLY, AUTH_COOKIE_MAX_AGE, AUTH_COOKIE_SAMESITE, AUTH_COOKIE_SECURE
 from app.exceptions.auth import UserAlreadyLoggedInException, UserNotLoggedInException
+from app.middlewares.user_verify import CurrentUserIdDep
 from app.schemas.auth import AuthSessionInfo, UserAuthResponse, UserLoginRequest, UserSignupRequest
 from app.utils.token import create_access_token, revoke_token
 from app.services import auth as service
@@ -15,12 +16,12 @@ router = APIRouter(prefix='/auth', tags=['Auth'])
 
 @router.post('/signup')
 async def signup(
-    req: Request,
     res: Response,
-    new_user: UserSignupRequest = Body(),
-    db: Session = Depends(get_db)
+    new_user: UserSignupRequest,
+    db: DBSessionDep,
+    user_id: CurrentUserIdDep
 ) -> UserAuthResponse:
-    if req.state.user_id is not None:
+    if user_id is not None:
         raise UserAlreadyLoggedInException()
 
     user = await service.signup(new_user, db)
@@ -41,12 +42,12 @@ async def signup(
 
 @router.post('/login')
 async def login(
-    req: Request,
     res: Response,
-    credentials: UserLoginRequest = Body(),
-    db: Session = Depends(get_db)
+    credentials: UserLoginRequest,
+    db: DBSessionDep,
+    user_id: CurrentUserIdDep
 ) -> UserAuthResponse:
-    if req.state.user_id is not None:
+    if user_id is not None:
         raise UserAlreadyLoggedInException()
 
     user = await service.login(credentials, db)
@@ -66,8 +67,11 @@ async def login(
 
 
 @router.get('/login')
-async def get_session_info(req: Request) -> AuthSessionInfo:
-    if req.state.user_id is None:
+async def get_session_info(
+    req: Request,
+    user_id: CurrentUserIdDep
+) -> AuthSessionInfo:
+    if user_id is None:
         raise UserNotLoggedInException()
     
     jwt = req.state.jwt
@@ -80,12 +84,13 @@ async def get_session_info(req: Request) -> AuthSessionInfo:
     )
 
 
-@router.post('/logout')
+@router.post('/logout', status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
     req: Request,
-    res: Response
+    res: Response,
+    user_id: CurrentUserIdDep
 ):
-    if req.state.user_id is None:
+    if user_id is None:
         raise UserNotLoggedInException()
     
     await revoke_token(
@@ -93,7 +98,6 @@ async def logout(
         exp_timestamp = req.state.jwt['exp']
     )
     
-    res.status_code = status.HTTP_204_NO_CONTENT
     res.delete_cookie(
         key = AUTH_COOKIE_KEY,
         httponly = AUTH_COOKIE_HTTPONLY,

@@ -23,7 +23,7 @@ async def get_current_user_id(req: Request):
 
 
 async def get_current_user_id_panic(req: Request):
-    user_id = get_current_user_id(req)
+    user_id = await get_current_user_id(req)
 
     if not user_id:
         raise UserNotLoggedInException()
@@ -45,7 +45,7 @@ async def get_current_user(req: Request):
 
 
 async def get_current_user_panic(req: Request):
-    user = get_current_user(req)
+    user = await get_current_user(req)
 
     if not user:
         raise UserNotLoggedInException()

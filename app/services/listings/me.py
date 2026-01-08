@@ -8,13 +8,13 @@ from app.models.listing import Listing
 from app.schemas.listings import ListingCreate, ListingUpdate, ListingResponseOwner
 
 
-async def create_offering(
+async def create_listing(
     db: Session,
     user_id: UUID,
     data: ListingCreate
 ) -> ListingResponseOwner:
     listing = Listing(
-        worker_id=user_id,
+        owner_id=user_id,
         title=data.title,
         description=data.description,
         price_cents=data.price_cents,

@@ -60,7 +60,7 @@ class BookingResponseBase(BaseModel):
     end_at: date
     created_at: datetime
     address: PublicAddressResponse
-    reason: Optional[str]
+    reason: Optional[str] = None
 
     class Config:
         from_attributes = True

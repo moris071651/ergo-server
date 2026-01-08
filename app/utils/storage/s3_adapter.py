@@ -81,6 +81,6 @@ class S3Adapter(StorageAdapter):
                 "get_object",
                 Params={"Bucket": bucket, "Key": key},
                 ExpiresIn=expires_seconds,
-            )
+            ).replace(self.endpoint_url, "http://0.0.0.0:9000")
         except:
             return None

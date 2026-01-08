@@ -22,3 +22,4 @@ class User(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     addresses = relationship("Address", back_populates="user", cascade="all, delete-orphan")
+    bookings = relationship("Booking", back_populates="user")

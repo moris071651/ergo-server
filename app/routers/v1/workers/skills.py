@@ -6,7 +6,7 @@ from app.middlewares.user_verify import CurrentUserIdPanicDep
 from app.services.workers import skills as service
 
 
-router = APIRouter(prefix='/me/skills')
+router = APIRouter(prefix='/me/skills', tags=["Workers's skills"])
 
 
 @router.get('/')

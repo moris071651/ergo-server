@@ -8,7 +8,7 @@ from app.middlewares.user_verify import CurrentUserIdPanicDep
 from app.schemas.listings import ListingCreate, ListingResponseOwner, ListingUpdate
 
 
-router = APIRouter(prefix="/workers/me/listings")
+router = APIRouter(prefix="/workers/me/listings", tags=["My Listings"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

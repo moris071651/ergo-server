@@ -12,12 +12,12 @@ from app.utils.token import revoke_token
 router = APIRouter(prefix='/me', tags=['Current user'])
 
 
-@router.get('', response_model=CurrentUserResponse)
+@router.get('')
 async def get_current_user(
     db: DBSessionDep,
     user_id: CurrentUserIdPanicDep,
     storage: StorageAdapterDep
-):
+) -> CurrentUserResponse:
     return await service.get_current_user(user_id, db, storage)
 
 
@@ -25,9 +25,10 @@ async def get_current_user(
 async def update_current_user(
     update: UpdateUserRequest,
     db: DBSessionDep,
+    storage: StorageAdapterDep,
     user_id: CurrentUserIdPanicDep
 ) -> CurrentUserResponse:
-    return await service.update_current_user(user_id, update, db)
+    return await service.update_current_user(user_id, update, db, storage)
 
 
 @router.delete('')

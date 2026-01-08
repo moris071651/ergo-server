@@ -20,22 +20,14 @@ async def get_current_user(
 ):
     user = await fetch_user(db, user_id)
     url = storage.create_presigned_url(BUCKET_USER_PICTURE, user.profile_image_key, expires_seconds=3600)
+    return CurrentUserResponse.model_validate({**user.__dict__, "profile_image_url": url})
     
-    return CurrentUserResponse(
-        id = user.id,
-        email = user.email,
-        profile_image_url = url,
-        first_name = user.first_name,
-        last_name = user.last_name,
-        created_at = user.created_at,
-        updated_at = user.updated_at
-    )
-
 
 async def update_current_user(
     user_id: UUID,
     update: UpdateUserRequest,
-    db: Session
+    db: Session,
+    storage: StorageAdapter
 ) -> CurrentUserResponse:
     user = await fetch_user(db, user_id)
     
@@ -51,15 +43,8 @@ async def update_current_user(
     await db.commit()
     await db.refresh(user)
 
-    return CurrentUserResponse(
-        id = user.id,
-        email = user.email,
-        profile_image_url = user.profile_image_url,
-        first_name = user.first_name,
-        last_name = user.last_name,
-        created_at = user.created_at,
-        updated_at = user.updated_at
-    )
+    url = storage.create_presigned_url(BUCKET_USER_PICTURE, user.profile_image_key, expires_seconds=3600)
+    return CurrentUserResponse.model_validate({**user.__dict__, "profile_image_url": url})
 
 
 async def deactivate_current_user(
@@ -111,7 +96,7 @@ async def update_current_user_picture(
     key = f"pfp/{user_id}/{uuid4()}{ext}"
 
     try:
-        storage.put_object("user-pictures", key, file_bytes, content_type=mime_type)
+        storage.put_object(BUCKET_USER_PICTURE, key, file_bytes, content_type=mime_type)
         file_url = storage.create_presigned_url(BUCKET_USER_PICTURE, key, expires_seconds=86400)
 
         user = await fetch_user(db, user_id)

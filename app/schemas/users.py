@@ -12,6 +12,9 @@ class UserResponse(BaseModel):
     last_name: str
     created_at: datetime    
 
+    class Config:
+        from_attributes = True
+
 
 class CurrentUserResponse(UserResponse):
     updated_at: datetime

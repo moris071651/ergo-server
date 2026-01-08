@@ -32,7 +32,7 @@ class Listing(Base):
     deleted_at = Column(DateTime(timezone=True), default=None ,nullable=True)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    owner = relationship("Worker", back_populates="listings")
+    worker = relationship("Worker", back_populates="listings")
     bookings = relationship("Booking", back_populates="listing")
 
     images = relationship(
