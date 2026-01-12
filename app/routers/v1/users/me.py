@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Request, Response, status
-from app.config.settings import AUTH_COOKIE_KEY
 from app.db.session import DBSessionDep
 from app.middlewares.user_verify import CurrentUserIdPanicDep
 
