@@ -1,9 +1,9 @@
 from fastapi import Request
 from starlette.types import ASGIApp
 from starlette.middleware.base import BaseHTTPMiddleware
+from app.config.settings import AUTH_ACCESS_COOKIE_KEY
 
 from app.utils.token import decode_access_token, is_token_valid
-from app.config.settings import AUTH_COOKIE_KEY
 
 
 class TokenMiddleware(BaseHTTPMiddleware):
@@ -11,7 +11,7 @@ class TokenMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, req: Request, call_next):
-        token = req.cookies.get(AUTH_COOKIE_KEY)
+        token = req.cookies.get(AUTH_ACCESS_COOKIE_KEY)
         payload = decode_access_token(token) if token else None
 
         if payload:

@@ -6,7 +6,7 @@ from app.middlewares.user_verify import CurrentUserIdPanicDep
 from app.schemas.users import CurrentUserResponse, UpdateUserRequest, UserPictureResponse
 from app.services.users import me as service
 from app.utils.storage import FileArg, StorageAdapterDep
-from app.utils.token import revoke_token
+from app.utils.token import invalidate_session, revoke_token
 
 
 router = APIRouter(prefix='/me', tags=['Current user'])
@@ -46,7 +46,7 @@ async def deactivate_current_user(
     )
 
     res.status_code = status.HTTP_204_NO_CONTENT
-    res.delete_cookie(AUTH_COOKIE_KEY)
+    await invalidate_session(req, res)
 
 
 @router.get('/picture')

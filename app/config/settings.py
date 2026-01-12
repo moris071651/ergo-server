@@ -14,11 +14,13 @@ JWT_ALGORITHM = jwt_cfg.get("algorithm", "HS256")
 JWT_EXPIRE_MINUTES = jwt_cfg.get("expire_minutes", 60)
 
 auth_cookie_cfg = data.get("auth_cookie", {})
-AUTH_COOKIE_KEY = auth_cookie_cfg.get("key", "ErgoAuthToken")
+AUTH_ACCESS_COOKIE_KEY = auth_cookie_cfg.get("access_key", "ErgoAuthAccessToken")
+AUTH_REFRESH_COOKIE_KEY = auth_cookie_cfg.get("refresh_key", "ErgoAuthRefreshToken")
 AUTH_COOKIE_HTTPONLY = auth_cookie_cfg.get("httponly", False)
 AUTH_COOKIE_SECURE = auth_cookie_cfg.get("secure", True)
-AUTH_COOKIE_SAMESITE = auth_cookie_cfg.get("samesite", "lax")
-AUTH_COOKIE_MAX_AGE = auth_cookie_cfg.get("max_age", 3600)
+AUTH_COOKIE_SAMESITE = auth_cookie_cfg.get("samesite", "none")
+ACCESS_TOKEN_EXPIRE = auth_cookie_cfg.get("access_expire", 15 * 60) # 15 minutes
+REFRESH_TOKEN_EXPIRE = auth_cookie_cfg.get("refresh_expire", 30 * 24 * 60 * 60) # 30 days
 
 redis_cfg = data.get("redis", {})
 REDIS_URL = os.getenv("REDIS_URL", redis_cfg.get("url", "redis://localhost:6379/0"))
