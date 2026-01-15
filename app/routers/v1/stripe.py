@@ -21,7 +21,6 @@ async def _find_booking_by_id(db, booking_id):
     stmt = (
         select(Booking)
         .where(Booking.id == booking_id)
-        .with_for_update()
     )
 
     result = await db.execute(stmt)
@@ -32,7 +31,6 @@ async def _find_booking_by_payment_intent(db, payment_intent_id):
     stmt = (
         select(Booking)
         .where(Booking.payment_intent_id == payment_intent_id)
-        .with_for_update()
     )
 
     result = await db.execute(stmt)
@@ -43,7 +41,6 @@ async def _find_booking_by_charge_id(db, charge_id):
     stmt = (
         select(Booking)
         .where(Booking.charge_id == charge_id)
-        .with_for_update()
     )
 
     result = await db.execute(stmt)
@@ -54,7 +51,6 @@ async def _find_worker_by_stripe_account_id(db, stripe_account_id):
     stmt = (
         select(Worker)
         .where(Worker.stripe_account_id == stripe_account_id)
-        .with_for_update()
     )
 
     result = await db.execute(stmt)
@@ -257,9 +253,12 @@ async def handle_charge_dispute_created(db, ev):
 async def handle_account_updated(db, ev):
     account = ev["data"]["object"]
 
+    print(f"stripe_account_id = {account["id"]}")
     worker = await _find_worker_by_stripe_account_id(db, account["id"])
     if not worker:
         return {"status": "ignored"}
+    
+    print(f"charges_enabled = {account["charges_enabled"]}")
 
     worker.charges_enabled = account["charges_enabled"]
     worker.payouts_enabled = account["payouts_enabled"]
@@ -290,8 +289,16 @@ async def stripe_onboarding(
     user_id: CurrentUserIdPanicDep
 ):
     worker = await get_worker_panic(db, user_id)
+    
     if not worker.stripe_account_id:
-        raise HTTPException(400, "Worker has no Stripe account")
+        account = stripe.Account.create(
+            type="express",
+            email=worker.user.email
+        )
+        worker.stripe_account_id = account.id
+        db.add(worker)
+        await db.commit()
+        await db.refresh(worker)
 
     account_link = stripe.AccountLink.create(
         account=worker.stripe_account_id,

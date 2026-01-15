@@ -1,5 +1,6 @@
 from typing import Optional
 from uuid import UUID
+from fastapi import HTTPException
 from sqlalchemy import exists, select
 
 from app.db.session import Session
@@ -24,12 +25,12 @@ async def get_worker_panic(db: Session, user_id: UUID, include_deleted: bool = F
     worker = await get_worker(db, user_id, include_deleted)
 
     if not worker:
-        raise Exception("Worker not found")
+        raise HTTPException(404, "Worker not found")
     
     return worker
 
 
 async def worker_exists(db: Session, user_id: UUID):
-    stmt = select(exists().where(Worker.user_id == user_id, Worker.deleted_at.is_not(None)))
+    stmt = select(exists().where(Worker.user_id == user_id, Worker.deleted_at.is_(None)))
     result = await db.execute(stmt)
     return result.scalar()

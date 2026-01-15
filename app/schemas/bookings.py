@@ -5,6 +5,7 @@ from enum import Enum
 from uuid import UUID
 
 from app.schemas.address import PublicAddressResponse
+from app.schemas.listings import ListingResponseOwner, ListingResponsePublic
 
 
 class BookingState(str, Enum):
@@ -15,8 +16,8 @@ class BookingState(str, Enum):
     PENDING = "pending"
     IN_PROGRESS = "in-progress"
     CANCELED = "canceled"
-    FINISHED = "finished"
     FINISH_PENDING = "finish-pending"
+    FINISHED = "finished"
 
 
 class BookingPaymentState(str, Enum):
@@ -37,7 +38,7 @@ class BookingCreate(BaseModel):
     @model_validator(mode="after")
     def check_dates(self):
         if (self.end_at - self.start_at).days < 0:
-            raise Exception()
+            raise ValueError("end_at must be after start_at")
         
         return self
     
@@ -48,7 +49,7 @@ class BookingReasonCreate(BaseModel):
     @model_validator(mode="after")
     def check_reason(self):
         if len(self.reason) < 1:
-            raise Exception()
+            raise ValueError("reason must not be empty")
         
         return self
 
@@ -61,15 +62,17 @@ class BookingResponseBase(BaseModel):
     created_at: datetime
     address: PublicAddressResponse
     reason: Optional[str] = None
+    customer_id: UUID
+    worker_id: UUID
 
     class Config:
         from_attributes = True
 
 
 class BookingResponseWorker(BookingResponseBase):
-    customer_id: UUID
+    listing: ListingResponseOwner
 
 
 class BookingResponseCustomer(BookingResponseBase):
-    worker_id: UUID
+    listing: ListingResponsePublic
     client_secret: str | None = None

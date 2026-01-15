@@ -1,5 +1,6 @@
 from uuid import UUID
 from typing import List
+from fastapi import HTTPException
 from sqlalchemy import select
 from datetime import datetime
 
@@ -64,7 +65,7 @@ async def get_my_listing_by_id(
     listing = result.scalars().first()
 
     if not listing:
-        raise Exception()
+        raise HTTPException(404, "Listing not found")
 
     return ListingResponseOwner.model_validate(listing)
 
@@ -86,7 +87,7 @@ async def edit_listing(
     listing = result.scalars().first()
 
     if not listing:
-        raise Exception()
+        raise HTTPException(404, "Listing not found")
 
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(listing, key, value)
@@ -115,7 +116,7 @@ async def delete_listing(
     listing = result.scalars().first()
 
     if not listing:
-        raise Exception()
+        raise HTTPException(404, "Listing not found")
 
     listing.deleted_at = datetime.utcnow()
     await db.commit()

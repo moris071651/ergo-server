@@ -56,9 +56,10 @@ async def login(
     db: DBSessionDep,
     user_id: CurrentUserIdDep
 ) -> UserAuthResponse:
+    print(credentials)
     if user_id is not None:
         raise UserAlreadyLoggedInException()
-
+    
     user = await service.login(credentials, db)
     access_token = create_access_token({"id": str(user.id)})
     refresh_token = create_refresh_token({"id": str(user.id)})

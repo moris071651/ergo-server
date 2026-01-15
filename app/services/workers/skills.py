@@ -1,5 +1,6 @@
 from typing import List, Optional, Union
 from uuid import UUID
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.skills import Skill
@@ -32,7 +33,7 @@ async def add_skills(db: AsyncSession, user_id: UUID, skills: Union[str, List[st
 
     invalid_skills = set(skill_names) - existing_names
     if invalid_skills:
-        raise Exception(f"Invalid skills: {', '.join(invalid_skills)}")
+        raise HTTPException(400, f"Invalid skills: {', '.join(invalid_skills)}")
 
     current_worker_skill_names = {s.name for s in worker.skills}
     for skill in existing_skills:

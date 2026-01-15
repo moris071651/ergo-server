@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     await init_models()
 
     if not STRIPE_SECRET_KEY and not STRIPE_WEBHOOK_SECRET:
-        raise Exception()
+        raise Exception("STRIPE_SECRET_KEY or/and STRIPE_WEBHOOK_SECRET not provided")
 
     stripe.api_key = STRIPE_SECRET_KEY
 

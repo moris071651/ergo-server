@@ -1,4 +1,5 @@
 from uuid import UUID
+from fastapi import HTTPException
 from sqlalchemy import select
 from app.db.session import Session
 from app.models.address import Address
@@ -9,7 +10,7 @@ from app.utils.workers import get_worker_panic
 async def _get_address(db, user_id, res_type):
     worker = await get_worker_panic(db, user_id)
     if worker.address is None:
-        raise Exception('Internal Server Error')
+        raise HTTPException(500, 'Internal Server Error')
     
     return res_type.model_validate(worker.address)
 
@@ -29,7 +30,7 @@ async def update_my_main_address(
     worker = await get_worker_panic(db, user_id)
 
     if data.address_id == worker.address_id:
-        raise Exception("This address is already your main address.")
+        raise HTTPException(409, "This address is already your main address.")
     
     stmt = select(Address).where(
         Address.id == data.address_id,
@@ -39,7 +40,7 @@ async def update_my_main_address(
     new_addr = result.scalars().first()
 
     if new_addr is None:
-        raise Exception("Address not found or does not belong to this user.")
+        raise HTTPException(404, "Address not found or does not belong to this user.")
     
     worker.address_id = new_addr.id
 

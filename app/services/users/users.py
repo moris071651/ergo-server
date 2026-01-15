@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from fastapi import HTTPException
+
 from app.db.session import Session
 from app.config.settings import BUCKET_USER_PICTURE
 from app.schemas.users import UserPictureResponse, UserResponse
@@ -17,9 +19,9 @@ async def get_user(
     storage: StorageAdapter
 ) -> UserResponse:
     if not user_exists(db, user_id):
-        raise Exception
+        raise HTTPException(404, "User not found")
     
-    user = fetch_user(db, user_id)
+    user = await fetch_user(db, user_id)
     profile_image_url = storage.create_presigned_url(BUCKET_USER_PICTURE, user.profile_image_key)
     
     return UserResponse(
@@ -38,7 +40,7 @@ async def get_user_picture(
     storage: StorageAdapter
 ) -> UserPictureResponse:
     if not user_exists(db, user_id):
-        raise Exception
+        raise HTTPException(404, "User not found")
     
     user = fetch_user(db, user_id)
     profile_image_url = storage.create_presigned_url(BUCKET_USER_PICTURE, user.profile_image_key)

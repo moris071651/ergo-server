@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+from fastapi import HTTPException
 
 from sqlalchemy import select
 from app.db.session import Session
@@ -35,11 +36,11 @@ async def create_worker(
 
             if address is None:
                 if data is None or data.address_id is None:
-                    raise Exception("Cannot reactivate worker: previous address was removed and no new address was provided.")
-
+                    raise HTTPException(400, "Cannot reactivate worker: previous address was removed and no new address was provided")
+                
                 address = await _get_address(db, user_id, data.address_id)
                 if address is None:
-                    raise Exception("Cannot reactivate worker: provided address does not exist.")
+                    raise HTTPException(404, "Cannot reactivate worker: provided address does not exist.")
 
                 worker.address_id = address.id
 
@@ -49,19 +50,19 @@ async def create_worker(
             await db.refresh(worker)
             return CurrentWorkerResponse.model_validate(worker)
 
-        raise Exception("Worker already exists.")
+        raise HTTPException(409, "Worker already exists.")
         
     if data is None:
-        raise Exception("Worker data is required.")
+        raise HTTPException(400, "Worker data is required.")
 
     address = await _get_address(db, user_id, data.address_id)
 
     if address is None:
-        raise Exception("Address not found or does not belong to this user.")
+        raise HTTPException(404, "Address not found or does not belong to this user.")
     
     user = await fetch_user(db, user_id)
     if not user:
-        raise Exception()
+        raise HTTPException(400, "User not found")
     
     stripe_account_id = await create_stripe_worker_account(email=user.email)
 

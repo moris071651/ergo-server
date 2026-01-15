@@ -21,6 +21,15 @@ async def create_booking(
     return await service.create_booking(db, user_id, listing_id, data)
 
 
+@router.post("/bookings/{booking_id}/reject")
+async def reject_booking(
+    booking_id: UUID,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
+):
+    return await service.reject_booking(db, user_id, booking_id)
+
+
 @router.post("/bookings/{booking_id}/approve")
 async def approve_booking(
     booking_id: UUID,
@@ -109,3 +118,11 @@ async def get_customer_booking_by_id(
     user_id: CurrentUserIdPanicDep
 ) -> BookingResponseCustomer:
     return await service.get_customer_booking_by_id(db, user_id, booking_id)
+
+@router.get("/bookings12/{booking_id}")
+async def get_booking12_by_id(
+    booking_id: UUID,
+    db: DBSessionDep,
+    user_id: CurrentUserIdPanicDep
+) -> BookingResponseCustomer:
+    return await service.get_booking12_by_id(db, user_id, booking_id)

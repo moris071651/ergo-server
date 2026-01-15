@@ -30,8 +30,8 @@ class Booking(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    listing = relationship("Listing", back_populates="bookings")
+    listing = relationship("Listing", back_populates="bookings", lazy="selectin")
     worker = relationship("Worker", back_populates="bookings")
     user = relationship("User", back_populates="bookings")
-    address = relationship("Address", back_populates="bookings")
+    address = relationship("Address", back_populates="bookings", lazy="selectin")
     reasons = relationship("BookingReason", back_populates="bookings")

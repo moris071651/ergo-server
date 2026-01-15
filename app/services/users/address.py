@@ -1,4 +1,5 @@
 from typing import List
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID
@@ -20,7 +21,7 @@ async def get_addresses_by_id(db: AsyncSession, user_id: UUID, address_id: UUID)
     address = result.scalars().first()
 
     if not address:
-        raise Exception()
+        raise HTTPException(404, "Address not found")
 
     return AddressResponse.model_validate(address)
 
@@ -29,7 +30,7 @@ async def add_address(db: AsyncSession, user_id: UUID, data: AddressCreate) -> A
     geo_location = reverse_geocode(data.lat, data.lon)
 
     if geo_location is None:
-        raise Exception()
+        raise HTTPException(500, "Can not get geo location")
 
     new_address = Address(
         user_id=user_id,
@@ -49,7 +50,7 @@ async def update_address(db: AsyncSession, user_id: UUID, address_id: UUID, data
     address = result.scalars().first()
 
     if not address:
-        raise Exception()
+        raise HTTPException(404, "Address not found")
     
     location_available = data.lon is not None and data.lat is not None
     location_change = data.lon != address.lon or data.lat != address.lat
@@ -75,12 +76,13 @@ async def remove_address(db: AsyncSession, user_id: UUID, address_id: UUID) -> N
     address = result.scalars().first()
 
     if not address:
-        raise Exception()
+        raise HTTPException(404, "Address not found")
     
     worker = await get_worker(db, user_id)
     if worker and not worker.deleted_at:
         if worker.address_id == address.id:
-            raise Exception()
+            raise HTTPException(409, "Address is currently assigned to a worker")
+
     
     await db.delete(address)
     await db.commit()

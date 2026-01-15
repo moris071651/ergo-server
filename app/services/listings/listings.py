@@ -1,4 +1,5 @@
 from uuid import UUID
+from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
@@ -17,8 +18,7 @@ async def get_listings_by_worker(
     user_id: UUID
 ):
     if not await worker_exists(db, user_id):
-        raise Exception()
-
+        raise HTTPException(404, "Worker not found")
     
     stmt = (
         select(Listing)
@@ -45,6 +45,12 @@ async def get_listings(db: Session, filters: dict = None):
         )
     )
 
+    stmt = (
+        stmt.outerjoin(Listing.bookings)
+        .group_by(Listing.id)
+        .order_by(func.count(Booking.id).desc())
+    )
+
     if filters:
         if "min_price" in filters:
             stmt = stmt.where(Listing.price >= filters["min_price"])
@@ -58,22 +64,13 @@ async def get_listings(db: Session, filters: dict = None):
         if "category" in filters:
             stmt = stmt.join(Listing.worker).join(Worker.skills).where(Skill.name.ilike(f"%{filters['category']}%"))
         
-        if "limit" in filters:
-            stmt = stmt.limit(filters["limit"])
-        else:
-            stmt = stmt.limit(filters["limit"])
+        stmt = stmt.limit(filters.get("limit", 10))
         
         if "title" in filters:
             stmt = stmt.where(Listing.title == filters["title"])
 
     else:
-        stmt = stmt.limit(filters["limit"])
-
-    stmt = (
-        stmt.outerjoin(Listing.bookings)
-        .group_by(Listing.id)
-        .order_by(func.count(Booking.id).desc())
-    )
+        stmt = stmt.limit(10)
 
     result = await db.execute(stmt)
     listings = result.unique().scalars().all()
@@ -96,6 +93,6 @@ async def get_listing_by_id(
     listing = result.scalars().first()
 
     if not listing:
-        raise Exception()
+        raise HTTPException(404, "Listing not found")
     
     return ListingResponsePublic.model_validate(listing)

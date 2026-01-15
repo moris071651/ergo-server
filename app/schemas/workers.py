@@ -18,6 +18,9 @@ class WorkerResponse(BaseModel):
 
 
 class CurrentWorkerResponse(WorkerResponse):
+    stripe_account_id: Optional[str]
+    charges_enabled: bool
+    payouts_enabled: bool
     updated_at: datetime
 
 

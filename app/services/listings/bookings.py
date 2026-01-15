@@ -58,6 +58,29 @@ async def _get_customer_booking(
     return booking
 
 
+async def _get_booking12(
+    db: Session,
+    booking_id: UUID,
+    user_id: UUID,
+) -> Booking:
+    stmt = (
+        select(Booking)
+        .where(
+            Booking.id == booking_id,
+            ((Booking.customer_id == user_id) | (Booking.worker_id == user_id))
+        )
+        .with_for_update()
+    )
+
+    result = await db.execute(stmt)
+    booking = result.scalars().first()
+
+    if not booking:
+        raise HTTPException(404, "Booking not found or not owned by you")
+
+    return booking
+
+
 async def _add_reason(db: Session, booking: Booking, user_id: UUID, from_state: BookingState, to_state: BookingState, reason: str):
     entry = BookingReason(
         booking_id=booking.id,
@@ -142,18 +165,15 @@ async def create_booking(db: Session, user_id: UUID, listing_id: UUID, data: Boo
     return BookingResponseCustomer.model_validate(booking)
 
 
-async def approve_booking(db: Session, user_id: UUID, booking_id: UUID, data: BookingReasonCreate):
+async def approve_booking(db: Session, user_id: UUID, booking_id: UUID):
     booking = await _get_worker_booking(db, booking_id, user_id)
     _forbid_on_hold(booking)
 
     if booking.state != BookingState.WAITING_APPROVAL:
         raise HTTPException(400, "Booking is not awaiting approval")
 
-    prev_state = booking.state
     booking.state = BookingState.PENDING_PAYMENT
     booking.updated_at = datetime.utcnow()
-
-    await _add_reason(db, booking, user_id, prev_state, booking.state, data.reason)
     
     await db.commit()
     await db.refresh(booking)
@@ -161,7 +181,23 @@ async def approve_booking(db: Session, user_id: UUID, booking_id: UUID, data: Bo
     return BookingResponseWorker.model_validate(booking)
 
 
-async def start_booking(db: Session, user_id: UUID, booking_id: UUID, data: BookingReasonCreate):
+async def reject_booking(db: Session, user_id: UUID, booking_id: UUID):
+    booking = await _get_worker_booking(db, booking_id, user_id)
+    _forbid_on_hold(booking)
+
+    if booking.state != BookingState.WAITING_APPROVAL:
+        raise HTTPException(400, "Booking is not awaiting approval")
+
+    booking.state = BookingState.CANCELED
+    booking.updated_at = datetime.utcnow()
+    
+    await db.commit()
+    await db.refresh(booking)
+
+    return BookingResponseWorker.model_validate(booking)
+
+
+async def start_booking(db: Session, user_id: UUID, booking_id: UUID):
     booking = await _get_worker_booking(db, booking_id, user_id)
     _forbid_on_hold(booking)
 
@@ -171,11 +207,8 @@ async def start_booking(db: Session, user_id: UUID, booking_id: UUID, data: Book
     if booking.payment_state != BookingPaymentState.PAID:
         raise HTTPException(400, "Booking has not been paid")
 
-    prev_state = booking.state
     booking.state = BookingState.IN_PROGRESS
     booking.updated_at = datetime.utcnow()
-
-    await _add_reason(db, booking, user_id, prev_state, booking.state, data.reason)
     
     await db.commit()
     await db.refresh(booking)
@@ -183,18 +216,15 @@ async def start_booking(db: Session, user_id: UUID, booking_id: UUID, data: Book
     return BookingResponseWorker.model_validate(booking)
 
 
-async def finish_booking(db: Session, user_id: UUID, booking_id: UUID, data: BookingReasonCreate):
+async def finish_booking(db: Session, user_id: UUID, booking_id: UUID):
     booking = await _get_worker_booking(db, booking_id, user_id)
     _forbid_on_hold(booking)
 
     if booking.state != BookingState.IN_PROGRESS:
         raise HTTPException(400, "Booking is not in progress")
 
-    prev_state = booking.state
     booking.state = BookingState.FINISH_PENDING
     booking.updated_at = datetime.utcnow()
-
-    await _add_reason(db, booking, user_id, prev_state, booking.state, data.reason)
 
     await db.commit()
     await db.refresh(booking)
@@ -206,7 +236,6 @@ async def confirm_finish_booking(
     db: Session,
     user_id: UUID,
     booking_id: UUID,
-    data: BookingReasonCreate,
 ):
     booking = await _get_customer_booking(db, booking_id, user_id)
     _forbid_on_hold(booking)
@@ -224,29 +253,23 @@ async def confirm_finish_booking(
         booking.state = BookingState.ON_HOLD
         raise HTTPException(409, "Worker payouts not enabled")
 
-    prev_state = booking.state
     booking.state = BookingState.FINISHED
     booking.updated_at = datetime.utcnow()
-
-    _add_reason(db, booking, user_id, prev_state, booking.state, data.reason)
 
     await pay_worker_for_booking(booking, worker)
 
     return BookingResponseCustomer.model_validate(booking)
 
 
-async def deny_finish_booking(db: Session, user_id: UUID, booking_id: UUID, data: BookingReasonCreate):
+async def deny_finish_booking(db: Session, user_id: UUID, booking_id: UUID):
     booking = await _get_customer_booking(db, booking_id, user_id)
     _forbid_on_hold(booking)
 
     if booking.state != BookingState.FINISH_PENDING:
         raise HTTPException(400, "Booking is not awaiting confirmation")
 
-    prev_state = booking.state
     booking.state = BookingState.IN_PROGRESS
     booking.updated_at = datetime.utcnow()
-
-    await _add_reason(db, booking, user_id, prev_state, booking.state, data.reason)
     
     await db.commit()
     await db.refresh(booking)
@@ -308,14 +331,42 @@ async def get_worker_booking_by_id(db: Session, worker_id: UUID, booking_id: UUI
     return BookingResponseWorker.model_validate(booking)
 
 
-async def get_customer_booking_by_id(db: Session, user_id: UUID, booking_id: UUID):
-    booking = await _get_customer_booking(db, booking_id, user_id)
+async def get_booking12_by_id(
+    db: Session,
+    user_id: UUID,
+    booking_id: UUID,
+):
+    booking = await _get_booking12(db, booking_id, user_id)
+    _forbid_on_hold(booking)
+    client_secret = None
 
-    if not booking:
-        raise HTTPException(404, "Booking not found")
+    if (
+        booking.state == BookingState.PENDING_PAYMENT
+        and booking.payment_state == BookingPaymentState.CREATED
+        and not booking.payment_intent_id
+    ):
+        worker = await db.get(Worker, booking.worker_id)
+
+        if not worker or not worker.charges_enabled:
+            booking.state = BookingState.ON_HOLD
+            raise HTTPException(409, "Worker cannot accept payments")
+
+        amount = calculate_price(booking.listing.price_cents)
+
+        intent = await create_payment_intent_for_booking(db, booking, worker, amount, booking.listing.currency_iso_code)
+
+        booking.payment_intent_id = intent.id
+        booking.payment_state = BookingPaymentState.CREATED
+
+        await db.commit()
+        await db.refresh(booking)
+        client_secret = intent.client_secret
 
     await _append_reason(db, booking)
-    return BookingResponseCustomer.model_validate(booking)
+
+    response = BookingResponseCustomer.model_validate(booking)
+    response.client_secret = client_secret
+    return response
 
 
 async def get_customer_booking_by_id(
