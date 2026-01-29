@@ -58,5 +58,6 @@ class Worker(Base):
         lazy="joined",
         uselist=False
     )
+    user = relationship("User", lazy="joined")
     bookings = relationship("Booking", back_populates="worker")
     listings = relationship("Listing", back_populates="worker")

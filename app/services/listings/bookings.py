@@ -338,7 +338,6 @@ async def get_booking12_by_id(
 ):
     booking = await _get_booking12(db, booking_id, user_id)
     _forbid_on_hold(booking)
-    client_secret = None
 
     if (
         booking.state == BookingState.PENDING_PAYMENT
@@ -356,16 +355,19 @@ async def get_booking12_by_id(
         intent = await create_payment_intent_for_booking(db, booking, worker, amount, booking.listing.currency_iso_code)
 
         booking.payment_intent_id = intent.id
-        booking.payment_state = BookingPaymentState.CREATED
+        booking.client_secret = intent.client_secret
+        booking.payment_state = BookingPaymentState.IN_PROGRESS
 
         await db.commit()
         await db.refresh(booking)
-        client_secret = intent.client_secret
 
     await _append_reason(db, booking)
 
     response = BookingResponseCustomer.model_validate(booking)
-    response.client_secret = client_secret
+
+    if booking.worker_id == user_id:
+        response.client_secret = None
+        
     return response
 
 
@@ -376,7 +378,6 @@ async def get_customer_booking_by_id(
 ):
     booking = await _get_customer_booking(db, booking_id, user_id)
     _forbid_on_hold(booking)
-    client_secret = None
 
     if (
         booking.state == BookingState.PENDING_PAYMENT
@@ -389,21 +390,20 @@ async def get_customer_booking_by_id(
             booking.state = BookingState.ON_HOLD
             raise HTTPException(409, "Worker cannot accept payments")
 
-        amount = calculate_price(booking.listing.price_cents)
+        amount = calculate_price(booking.listing.price_cents) + 100
 
         intent = await create_payment_intent_for_booking(db, booking, worker, amount, booking.listing.currency_iso_code)
 
         booking.payment_intent_id = intent.id
-        booking.payment_state = BookingPaymentState.CREATED
+        booking.payment_state = BookingPaymentState.IN_PROGRESS
+        booking.client_secret = intent.client_secret
 
         await db.commit()
         await db.refresh(booking)
-        client_secret = intent.client_secret
 
     await _append_reason(db, booking)
 
     response = BookingResponseCustomer.model_validate(booking)
-    response.client_secret = client_secret
     return response
 
 

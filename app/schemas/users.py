@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr
 class UserResponse(BaseModel):
     id: UUID
     email: EmailStr
-    profile_image_url: Optional[str]
+    profile_image_url: Optional[str] = None
     first_name: str
     last_name: str
     created_at: datetime    

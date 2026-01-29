@@ -3,6 +3,8 @@ from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel
 
+from app.schemas.users import UserResponse
+
 
 class WorkerResponse(BaseModel):
     user_id: UUID
@@ -14,8 +16,11 @@ class WorkerResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True    
+        from_attributes = True
 
+
+class PopularWorkerResponse(WorkerResponse):
+    user: UserResponse
 
 class CurrentWorkerResponse(WorkerResponse):
     stripe_account_id: Optional[str]

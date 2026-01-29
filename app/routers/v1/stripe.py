@@ -108,11 +108,7 @@ async def handle_checkout_session_completed(db, ev):
     if not booking:
         return {"status": "ignored"}
 
-    if booking.status != BookingState.PENDING_PAYMENT:
-        return {"status": "already_processed"}
-
     booking.payment_intent_id = payment_intent_id
-    booking.payment_state = BookingPaymentState.IN_PROGRESS
 
     await db.commit()
     return {"status": "ok"}
@@ -127,7 +123,7 @@ async def handle_payment_intent_succeeded(db, ev):
     if not booking:
         return {"status": "ignored"}
     
-    if booking.status != BookingState.PENDING_PAYMENT:
+    if booking.state != BookingState.PENDING_PAYMENT:
         return {"status": "already_processed"}
     
     if booking.payment_state == BookingPaymentState.CREATED:
@@ -136,12 +132,14 @@ async def handle_payment_intent_succeeded(db, ev):
     if booking.payment_state != BookingPaymentState.IN_PROGRESS:
         return {"status": "already_processed"}
     
-    charges = payment_intent["charges"]["data"]
+    print(payment_intent)
+    
+    charges = payment_intent.get("latest_charge")
     if not charges:
         return {"status": "ignored"}
 
-    booking.charge_id = charges[0]["id"]
-    booking.status = BookingState.PENDING
+    booking.charge_id = charges
+    booking.state = BookingState.PENDING
     booking.payment_state = BookingPaymentState.PAID
     booking.paid_amount = payment_intent["amount_received"]
     booking.paid_currency = payment_intent["currency"]
@@ -159,7 +157,7 @@ async def handle_payment_intent_failed(db, ev):
     if not booking:
         return {"status": "ignored"}
 
-    if booking.status != BookingState.PENDING_PAYMENT:
+    if booking.state != BookingState.PENDING_PAYMENT:
         return {"status": "already_processed"}
     
     if booking.payment_state == BookingPaymentState.CREATED:
@@ -168,7 +166,7 @@ async def handle_payment_intent_failed(db, ev):
     if booking.payment_state != BookingPaymentState.IN_PROGRESS:
         return {"status": "already_processed"}
 
-    booking.status = BookingState.CANCELED
+    booking.state = BookingState.CANCELED
     booking.payment_state = BookingPaymentState.FAILED
 
     await db.commit()
@@ -184,7 +182,7 @@ async def handle_charge_refunded(db, ev):
         return {"status": "ignored"}
 
     booking.payment_state = BookingPaymentState.REFUNDED
-    booking.status = BookingState.CANCELED
+    booking.state = BookingState.CANCELED
 
     await db.commit()
     return {"status": "ok"}
@@ -202,10 +200,10 @@ async def handle_checkout_session_expired(db, ev):
     if not booking:
         return {"status": "ignored"}
 
-    if booking.status != BookingState.PENDING_PAYMENT:
+    if booking.state != BookingState.PENDING_PAYMENT:
         return {"status": "already_processed"}
 
-    booking.status = BookingState.CANCELED
+    booking.state = BookingState.CANCELED
     booking.payment_state = BookingPaymentState.EXPIRED
 
     await db.commit()
@@ -227,7 +225,7 @@ async def handle_payment_intent_canceled(db, ev):
     }:
         return {"status": "already_processed"}
 
-    booking.status = BookingState.CANCELED
+    booking.state = BookingState.CANCELED
     booking.payment_state = BookingPaymentState.CANCELED
 
     await db.commit()
@@ -244,7 +242,7 @@ async def handle_charge_dispute_created(db, ev):
         return {"status": "ignored"}
 
     booking.payment_state = BookingPaymentState.DISPUTED
-    booking.status = BookingState.ON_HOLD
+    booking.state = BookingState.ON_HOLD
 
     await db.commit()
     return {"status": "ok"}

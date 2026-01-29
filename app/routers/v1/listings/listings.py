@@ -24,7 +24,8 @@ async def get_listings(
     min_price: Optional[float] = Query(None, description="Minimum price filter"),
     max_price: Optional[float] = Query(None, description="Maximum price filter"),
     city: Optional[str] = Query(None, description="Filter by city"),
-    title: Optional[str] = Query(None, description="Filter by title"),
+    title: Optional[str] = Query(None, description="Filter by exact title"),
+    query: Optional[str] = Query(None, description="Filter by title"),
     limit: Optional[int] = Query(None, description="Limit the number of results"),
     category: Optional[str] = Query(None, description="Filter by category"),
 ):
@@ -36,6 +37,7 @@ async def get_listings(
         "max_price": max_price,
         "city": city,
         "title": title,
+        "query": query,
         "category": category,
         "limit": limit
     }

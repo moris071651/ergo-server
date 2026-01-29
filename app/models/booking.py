@@ -22,6 +22,7 @@ class Booking(Base):
     payment_state = Column(Enum(BookingPaymentState), nullable=False, default=BookingPaymentState.CREATED)
 
     transfer_id = Column(String, nullable=True)
+    client_secret = Column(String, nullable=True, default=None)
     payment_intent_id = Column(String(64), nullable=True, index=True)
     charge_id = Column(String, nullable=True, index=True)
     paid_currency = Column(String(3), nullable=True)

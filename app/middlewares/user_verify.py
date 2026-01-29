@@ -30,6 +30,11 @@ async def get_current_user_id_panic(req: Request):
 
     return user_id
 
+CurrentUserIdPanicDep = Annotated[
+    UUID,
+    Depends(get_current_user_id_panic)
+]
+
 
 async def get_current_user(req: Request):
     payload = getattr(req.state, "jwt", None)

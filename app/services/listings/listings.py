@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import func, select
@@ -34,7 +35,7 @@ async def get_listings_by_worker(
     return [ListingResponsePublic.model_validate(l) for l in listings]
 
 
-async def get_listings(db: Session, filters: dict = None):
+async def get_listings(db: Session, filters: Optional[dict] = None):
     stmt = (
         select(Listing)
         .where(Listing.is_active == True)
@@ -68,6 +69,10 @@ async def get_listings(db: Session, filters: dict = None):
         
         if "title" in filters:
             stmt = stmt.where(Listing.title == filters["title"])
+
+        if "query" in filters:
+            for word in filters["query"].split():
+                stmt = stmt.where(Listing.title.ilike(f"%{word}%"))
 
     else:
         stmt = stmt.limit(10)
