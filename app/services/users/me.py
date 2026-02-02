@@ -1,7 +1,10 @@
+import io
+from pathlib import Path
+from PIL import Image, ImageOps
 from datetime import datetime
-import mimetypes
-from typing import Optional
 from uuid import UUID, uuid4
+from typing import Optional
+import mimetypes
 
 from app.config.settings import BUCKET_USER_PICTURE
 from app.exceptions.file import FileCreationFailedException, FileDeletionFailedException, FileFetchingFailedException, NotImageFormatException
@@ -85,18 +88,30 @@ async def update_current_user_picture(
     file_name: Optional[str],
     file_bytes: bytes
 ) -> UserPictureResponse:
-    filename = file_name or "upload"
-    mime_type, _ = mimetypes.guess_type(filename)
+    filename = file_name or "upload.bin"
+    mime_type, _ = mimetypes.guess_type(filename, strict=False)
     mime_type = mime_type or "application/octet-stream"
-    ext = mimetypes.guess_extension(mime_type) or ".bin"
 
     if not mime_type.startswith("image/"):
+        ext = Path(filename).suffix.lower() or ".bin"
         raise NotImageFormatException(user_id, ext)
 
-    key = f"pfp/{user_id}/{uuid4()}{ext}"
+    key = f"pfp/{user_id}/{uuid4()}.jpeg"
 
     try:
-        storage.put_object(BUCKET_USER_PICTURE, key, file_bytes, content_type=mime_type)
+        img = Image.open(io.BytesIO(file_bytes))
+        img = ImageOps.exif_transpose(img)
+
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+
+        output = io.BytesIO()
+        img_format = "JPEG"
+
+        img.save(output, format=img_format) 
+        clean_bytes = output.getvalue()
+
+        storage.put_object(BUCKET_USER_PICTURE, key, clean_bytes, content_type="image/jpeg")
         file_url = storage.create_presigned_url(BUCKET_USER_PICTURE, key, expires_seconds=86400)
 
         user = await fetch_user(db, user_id)

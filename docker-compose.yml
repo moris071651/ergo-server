@@ -2,7 +2,7 @@ services:
   fastapi:
     build: .
     container_name: ergo_server
-    command: uvicorn app.main:app --host 0.0.0.0 --port 9858 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 9858 --reload --reload-include "config.toml"
 
     volumes:
       - .:/app

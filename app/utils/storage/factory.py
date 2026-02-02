@@ -1,4 +1,4 @@
-from app.config.settings import STORAGE_AWS_ACCESS_KEY_ID, STORAGE_AWS_REGION, STORAGE_AWS_SECRET_ACCESS_KEY, STORAGE_ENDPOINT, STORAGE_PROVIDER
+from app.config.settings import HOST_ENDPOINT, STORAGE_AWS_ACCESS_KEY_ID, STORAGE_AWS_REGION, STORAGE_AWS_SECRET_ACCESS_KEY, STORAGE_ENDPOINT, STORAGE_PROVIDER
 
 from app.utils.storage.base import StorageAdapter
 from app.utils.storage.s3_adapter import S3Adapter
@@ -12,8 +12,9 @@ def create_storage_adapter() -> StorageAdapter:
         access_key = STORAGE_AWS_ACCESS_KEY_ID
         secret_key = STORAGE_AWS_SECRET_ACCESS_KEY
         endpoint = STORAGE_ENDPOINT
+        host = HOST_ENDPOINT
 
-        return S3Adapter(region, access_key, secret_key, endpoint)
+        return S3Adapter(region, access_key, secret_key, host, endpoint)
 
     else:
         raise ValueError(f"Unknown STORAGE_PROVIDER: {provider}")

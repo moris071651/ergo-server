@@ -12,8 +12,12 @@ class S3Adapter(StorageAdapter):
         region: str,
         access_key: str,
         secret_key: str,
-        endpoint_url: Optional[str] = None,
+        host_url: Optional[str] = None,
+        endpoint_url: Optional[str] = None
     ):
+        if not endpoint_url or not host_url:
+            raise ValueError("S3Adapter requires both host_url and endpoint_url")
+
         self.s3 = boto3.client(
             "s3",
             region_name = region,
@@ -23,6 +27,7 @@ class S3Adapter(StorageAdapter):
             config = Config(signature_version="s3v4"),
         )
 
+        self.host_url = host_url 
         self.endpoint_url = endpoint_url
 
 
@@ -81,6 +86,6 @@ class S3Adapter(StorageAdapter):
                 "get_object",
                 Params={"Bucket": bucket, "Key": key},
                 ExpiresIn=expires_seconds,
-            ).replace(self.endpoint_url, "http://0.0.0.0:9000")
+            ).replace(self.endpoint_url, f"{self.host_url}/images")
         except:
             return None

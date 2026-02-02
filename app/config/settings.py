@@ -8,6 +8,9 @@ try:
 except Exception as e:
     pass
 
+
+HOST_ENDPOINT = os.getenv("HOST_ENDPOINT", data.get("host", "http://localhost:5438"))
+
 jwt_cfg = data.get("jwt", {})
 JWT_SECRET_KEY = jwt_cfg.get("secret_key", "super-secret-key")
 JWT_ALGORITHM = jwt_cfg.get("algorithm", "HS256")

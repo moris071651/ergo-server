@@ -1,8 +1,11 @@
+import io
 import mimetypes
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import func, select
+from PIL import Image, ImageOps
 from app.config.settings import BUCKET_LISTING_IMAGES
 
 from app.db.session import Session
@@ -52,15 +55,15 @@ async def upload_listing_images(
     uploads = []
 
     for image in images:
-        filename = image.filename or "upload"
+        filename = image.filename or "upload.bin"
         mime_type, _ = mimetypes.guess_type(filename)
         mime_type = mime_type or image.content_type or "application/octet-stream"
-        ext = mimetypes.guess_extension(mime_type) or ".bin"
 
         if not mime_type.startswith("image/"):
+            ext = Path(filename).suffix.lower() or ".bin"
             raise NotImageFormatException(user_id, ext)
 
-        key = f"listing/{listing_id}/{uuid4()}{ext}"
+        key = f"listing/{listing_id}/{uuid4()}.jpeg"
 
         uploads.append({
             "key": key,
@@ -74,11 +77,23 @@ async def upload_listing_images(
 
     try:
         for upload in uploads:
+            img = Image.open(io.BytesIO(upload["file"]))
+            img = ImageOps.exif_transpose(img)
+
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+
+            output = io.BytesIO()
+            img_format = "JPEG"
+
+            img.save(output, format=img_format) 
+            clean_bytes = output.getvalue()
+
             storage.put_object(
                 BUCKET_LISTING_IMAGES,
                 upload["key"],
-                upload["file"],
-                content_type=upload["mime_type"],
+                clean_bytes,
+                content_type="image/jpeg",
             )
 
             uploaded_keys.append(upload["key"])
