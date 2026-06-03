@@ -38,7 +38,11 @@ async def get_popular_workers_profiles(
 ) -> List[PopularWorkerResponse]:
     stmt = (
         select(Worker)
-        .where(Worker.deleted_at.is_(None))
+        .where(
+            Worker.deleted_at.is_(None),
+            Worker.charges_enabled.is_(True),
+            Worker.payouts_enabled.is_(True)
+        )
         .options(
             joinedload(Worker.user),
             joinedload(Worker.address),
@@ -78,7 +82,8 @@ async def get_popular_workers_profiles(
             url = storage.create_presigned_url(BUCKET_USER_PICTURE, worker.user.profile_image_key, expires_seconds=3600)
 
         tmp = PopularWorkerResponse.model_validate(worker)
-        tmp.user.profile_image_url = url
+        tmp.user.profile_image_url = None
+        tmp.profile_image_url = url
         ret.append(tmp)
 
     return ret

@@ -38,6 +38,9 @@ async def update_current_user(
         exclude_unset = True,
         exclude_none = True
     ).items():
+        if getattr(user, key) == value:
+            continue
+
         if key == 'email' and not await email_available(db, value):
             raise EmailUsedExistsException()
 

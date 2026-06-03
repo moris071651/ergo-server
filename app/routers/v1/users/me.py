@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Request, Response, status
+from app.config.settings import AUTH_ACCESS_COOKIE_KEY, AUTH_REFRESH_COOKIE_KEY
 from app.db.session import DBSessionDep
 from app.middlewares.user_verify import CurrentUserIdPanicDep
 
 from app.schemas.users import CurrentUserResponse, UpdateUserRequest, UserPictureResponse
 from app.services.users import me as service
 from app.utils.storage import FileArg, StorageAdapterDep
-from app.utils.token import invalidate_session, revoke_token
+from app.utils.token import invalidate_session
 
 
 router = APIRouter(prefix='/me', tags=['Current user'])
@@ -39,13 +40,21 @@ async def deactivate_current_user(
 ):
     await service.deactivate_current_user(user_id, db)
 
-    await revoke_token(
-        jti = req.state.jwt['jti'],
-        exp_timestamp = req.state.jwt['exp']
+    refresh_token = req.cookies.get(AUTH_REFRESH_COOKIE_KEY)
+    access_token = req.cookies.get(AUTH_ACCESS_COOKIE_KEY)
+
+    if not refresh_token:
+        res.delete_cookie(AUTH_ACCESS_COOKIE_KEY)
+        res.delete_cookie(AUTH_REFRESH_COOKIE_KEY)
+        return
+
+    await invalidate_session(
+        refresh_token=refresh_token,
+        access_token=access_token,
     )
 
-    res.status_code = status.HTTP_204_NO_CONTENT
-    await invalidate_session(req, res)
+    res.delete_cookie(AUTH_ACCESS_COOKIE_KEY)
+    res.delete_cookie(AUTH_REFRESH_COOKIE_KEY)
 
 
 @router.get('/picture')

@@ -22,7 +22,7 @@ AUTH_REFRESH_COOKIE_KEY = auth_cookie_cfg.get("refresh_key", "ErgoAuthRefreshTok
 AUTH_COOKIE_HTTPONLY = auth_cookie_cfg.get("httponly", False)
 AUTH_COOKIE_SECURE = auth_cookie_cfg.get("secure", True)
 AUTH_COOKIE_SAMESITE = auth_cookie_cfg.get("samesite", "none")
-ACCESS_TOKEN_EXPIRE = auth_cookie_cfg.get("access_expire", 30 * 24 * 60 * 60) # 15 minutes
+ACCESS_TOKEN_EXPIRE = auth_cookie_cfg.get("access_expire", 10 * 60) # 10 minutes
 REFRESH_TOKEN_EXPIRE = auth_cookie_cfg.get("refresh_expire", 30 * 24 * 60 * 60) # 30 days
 
 redis_cfg = data.get("redis", {})

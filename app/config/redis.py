@@ -20,5 +20,5 @@ async def close_redis():
         await redis_client.close()
 
 
-def get_redis():
+def get_redis() -> redis.Redis | None:
     return redis_client

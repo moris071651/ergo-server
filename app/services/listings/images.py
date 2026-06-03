@@ -45,6 +45,12 @@ async def _get_images(db, listing_id):
     return result.scalars().all() or []
 
 
+def add_field_to_model(model, addition):
+    return {
+        k: v for k, v in model.__dict__.items() 
+    } | addition
+
+
 async def upload_listing_images(
     db: Session,
     storage: StorageAdapter,
@@ -65,9 +71,11 @@ async def upload_listing_images(
 
         key = f"listing/{listing_id}/{uuid4()}.jpeg"
 
+        file_bytes = await image.read()
+
         uploads.append({
             "key": key,
-            "file": image.file,
+            "bytes": file_bytes,
             "mime_type": mime_type
         })
 
@@ -77,7 +85,7 @@ async def upload_listing_images(
 
     try:
         for upload in uploads:
-            img = Image.open(io.BytesIO(upload["file"]))
+            img = Image.open(io.BytesIO(upload["bytes"]))
             img = ImageOps.exif_transpose(img)
 
             if img.mode != "RGB":
@@ -99,6 +107,7 @@ async def upload_listing_images(
             uploaded_keys.append(upload["key"])
 
             image_row = ListingImage(
+                id=uuid4(),
                 listing_id=listing_id,
                 object_key=upload["key"],
                 is_primary=(max_order == -1),
@@ -148,7 +157,6 @@ async def upload_listing_images(
 async def get_listing_images(
     db: Session,
     storage: StorageAdapter,
-    user_id: UUID,
     listing_id: UUID,
 ) -> list[ListingImageResponse]:
     images = await _get_images(db, listing_id)
@@ -161,7 +169,12 @@ async def get_listing_images(
             expires_seconds=86400,
         )
         responses.append(
-            ListingImageResponse.model_validate(image).model_copy(update={"url": url})
+            ListingImageResponse(
+                id=image.id,
+                url=url,
+                is_primary=image.is_primary,
+                sort_order=image.sort_order,
+            )
         )
 
     return responses
@@ -201,7 +214,6 @@ async def make_listing_images_primary(
 async def get_listing_images_primary(
     db: Session,
     storage: StorageAdapter,
-    user_id: UUID,
     listing_id: UUID
 ) -> ListingImageResponse:
     primary_image = await _get_primary_image(db, listing_id)
@@ -210,7 +222,7 @@ async def get_listing_images_primary(
         raise HTTPException(status_code=404, detail="No primary image found")
 
     url = storage.create_presigned_url(BUCKET_LISTING_IMAGES, primary_image.object_key, expires_seconds=86400)
-    return ListingImageResponse.model_validate(primary_image).model_copy(update={"url": url})
+    return ListingImageResponse.model_validate(add_field_to_model(primary_image, {"url": url}))
 
 
 async def delete_listing_image(

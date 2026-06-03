@@ -6,7 +6,8 @@ from app.middlewares.user_verify import CurrentUserIdPanicDep
 from app.services.workers import skills as service
 
 
-router = APIRouter(prefix='/me/skills', tags=["Workers's skills"])
+router = APIRouter(prefix='/me/skills', tags=["Worker's skills"])
+router_skills = APIRouter(prefix='/skills', tags=["Workers' skills"])
 
 
 @router.get('/')
@@ -15,6 +16,13 @@ async def get_skills(
     user_id: CurrentUserIdPanicDep,
 ) -> List[str]:
     return await service.get_skills(db, user_id)
+
+
+@router_skills.get('/')
+async def get_all_skills(
+    db: DBSessionDep,
+) -> List[str]:
+    return await service.get_all_skills(db)
 
 
 @router.post('/skills', status_code=status.HTTP_201_CREATED)

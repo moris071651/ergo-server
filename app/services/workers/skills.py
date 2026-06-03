@@ -20,6 +20,12 @@ async def get_skills(db: AsyncSession, user_id: UUID):
     return [skill.name for skill in worker.skills]
 
 
+async def get_all_skills(db: AsyncSession) -> List[str]:
+    stmt = select(Skill.name)
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
 async def add_skills(db: AsyncSession, user_id: UUID, skills: Union[str, List[str]], worker: Optional[Worker] = None):
     skill_names = await _normalize_skills(skills)
 
@@ -43,6 +49,19 @@ async def add_skills(db: AsyncSession, user_id: UUID, skills: Union[str, List[st
     await db.commit()
     await db.refresh(worker)
     return [s.name for s in worker.skills]
+
+
+async def check_skills(db: AsyncSession, skills: Union[str, List[str]]):
+    skill_names = await _normalize_skills(skills)
+
+    stmt = select(Skill).where(Skill.name.in_(skill_names))
+    result = await db.execute(stmt)
+    existing_skills = result.scalars().all()
+    existing_names = {s.name for s in existing_skills}
+
+    invalid_skills = set(skill_names) - existing_names
+    if invalid_skills:
+        raise HTTPException(400, f"Invalid skills: {', '.join(invalid_skills)}")
 
 
 async def replace_skills(db: AsyncSession, user_id: UUID, skills: Union[str, List[str]]):

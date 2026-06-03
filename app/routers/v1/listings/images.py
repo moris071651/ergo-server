@@ -17,11 +17,10 @@ router = APIRouter(tags=["Listing Images"])
 @router.get("/listings/{listing_id}/images")
 async def get_listing_images(
     listing_id: UUID,
-    user_id: CurrentUserIdPanicDep,
     storage: StorageAdapterDep,
     db: DBSessionDep
 ) -> List[ListingImageResponse]:
-    return await service.get_listing_images(db, storage, user_id, listing_id)
+    return await service.get_listing_images(db, storage, listing_id)
 
 
 @router.post("/listings/{listing_id}/images")
@@ -49,11 +48,10 @@ async def delete_listing_image(
 @router.get("/listings/{listing_id}/images/primary")
 async def get_listing_images_primary(
     listing_id: UUID,
-    user_id: CurrentUserIdPanicDep,
     storage: StorageAdapterDep,
     db: DBSessionDep
 ) -> ListingImageResponse:
-    return await service.get_listing_images_primary(db, storage, user_id, listing_id)
+    return await service.get_listing_images_primary(db, storage, listing_id)
 
 
 @router.post("/listings/{listing_id}/images/{image_id}/primary")

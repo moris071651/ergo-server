@@ -43,6 +43,3 @@ async def get_all_worker_profiles(
     db: DBSessionDep,
 ) -> List[WorkerResponse]:
     return await service.get_all_worker_profiles(db)
-
-
-

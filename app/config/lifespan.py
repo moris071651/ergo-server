@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from app.db.seeds import init_seeds
 from fastapi import FastAPI
 import logging
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     await init_redis()
     await init_models()
+    await init_seeds()
 
     if not STRIPE_SECRET_KEY and not STRIPE_WEBHOOK_SECRET:
         raise Exception("STRIPE_SECRET_KEY or/and STRIPE_WEBHOOK_SECRET not provided")

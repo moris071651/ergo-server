@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+from app.models.skills import Skill
 from fastapi import HTTPException
 
 from sqlalchemy import select
@@ -8,7 +9,7 @@ from app.db.session import Session
 from app.models.address import Address
 from app.models.workers import Worker
 from app.schemas.workers import CurrentWorkerResponse, WorkerCreate, WorkerUpdate
-from app.services.workers.skills import add_skills
+from app.services.workers.skills import add_skills, check_skills
 from app.utils.stripe import create_stripe_worker_account
 from app.utils.user import fetch_user
 from app.utils.workers import get_worker, get_worker_panic
@@ -27,6 +28,9 @@ async def create_worker(
     data: Optional[WorkerCreate]
 ) -> CurrentWorkerResponse:
     worker = await get_worker(db, user_id, include_deleted=True)
+
+    if data.skills:
+        check_skills(db, data.skills)
 
     if worker is not None:
         if worker.deleted_at is not None:
@@ -102,8 +106,11 @@ async def update_worker_profile(
     worker = await get_worker_panic(db, user_id)
     update_data = data.model_dump(exclude_unset=True)
 
-    for field, value in update_data.items():
-        setattr(worker, field, value)
+    for key, value in update_data.items():
+        if getattr(worker, key) == value:
+            continue
+
+        setattr(worker, key, value)
 
     await db.commit()
     await db.refresh(worker)
