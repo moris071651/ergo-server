@@ -68,4 +68,4 @@ async def create_stripe_worker_account(email: str) -> str:
 
 
 def calculate_price(price: int, currency: str = 'EUR') -> int:
-     return math.ceil(price * 1.2)
+     return math.ceil(price)
